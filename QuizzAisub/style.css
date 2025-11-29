@@ -1,0 +1,111 @@
+@import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans&display=swap");
+@media screen and(maxwidth : 720px) {
+  #dash {
+    position: fixed;
+    left: 0;
+    width: 18rem;
+    z-index: 3;
+    box-shadow: 1rem 3rem 4 rem;
+    height: 100vh;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --color-primary: #ffffff;
+  --color-secondary: #e6e6e6;
+  --color-tertiary: #f8f8f8;
+  --color-quaternary: #f5f5f5;
+  --color-quinary: #e7e7e7;
+}
+
+body {
+  min-height: 100vh;
+  font-weight: 300;
+  font-size: 1.25rem;
+  overflow: hidden;
+  background-color: #eff8e2;
+  position: relative;
+}
+
+.content {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
+
+.text-shadows {
+  font-family: "Pixelify Sans", sans-serif; /* Or your chosen pixel font */
+  font-size: 7em;
+  color: rgb(186, 255, 241);
+  text-shadow: 1px 1px 0px rgb(225, 206, 216), 2px 2px 0px rgb(132, 119, 124),
+    3px 3px 0px #802, 4px 4px 0px #600, 5px 5px 5px rgba(0, 0, 0, 0.5);
+}
+
+.star {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: rgb(59, 171, 120);
+  border-radius: 50%; /* Makes them circular */
+  opacity: 0.8;
+  /* Initial positioning can be set here, or handled by the animation */
+}
+@keyframes orbit-right-to-left {
+  0% {
+    transform: translateX(100vw) translateY(0); /* Start far right, at center vertical */
+    opacity: 0; /* Fade in */
+  }
+  25% {
+    transform: translateX(75vw) translateY(-50px); /* Move left and slightly up */
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(50vw) translateY(0); /* Move further left, back to center vertical */
+  }
+  75% {
+    transform: translateX(25vw) translateY(50px); /* Move left and slightly down */
+  }
+  100% {
+    transform: translateX(-10vw) translateY(0); /* End far left, at center vertical */
+    opacity: 0; /* Fade out */
+  }
+}
+.star-1 {
+  animation: orbit-right-to-left 15s linear infinite;
+  top: 20%; /* Adjust vertical position */
+}
+
+.star-2 {
+  animation: orbit-right-to-left 16s linear infinite;
+  animation-delay: 2s; /* Stagger the animation */
+  top: 30%;
+}
+
+.star-3 {
+  animation: orbit-right-to-left 10s linear infinite;
+  animation-delay: 6s;
+  top: 60%;
+}
+.star-4 {
+  animation: orbit-right-to-left 12s linear infinite;
+  animation-delay: 7s;
+  top: 60%;
+}
+.star-5 {
+  animation: orbit-right-to-left 15s linear infinite;
+  animation-delay: 8s;
+  top: 60%;
+}
+#continue {
+  font-family: "Pixelify Sans";
+  color: rgb(12, 105, 99);
+  height: 60px;
+  width: 120px;
+  background-color: rgb(38, 211, 202);
+}
