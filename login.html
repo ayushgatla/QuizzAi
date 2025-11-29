@@ -6,8 +6,8 @@
 
     <link rel="stylesheet" href="QuizzAi/style.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type ="module" src="firebase.js" ></script>
-    <script type ="module" src="auth.js" ></script>
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="auth.js"></script>
     <title>QuizzAi - Learn by Practice</title>
   </head>
 
@@ -72,64 +72,63 @@
       showNextChar();
 
       function startauth() {
-  const cont = document.getElementById("continue");
-  cont.classList.add("hidden");
+        const cont = document.getElementById("continue");
+        cont.classList.add("hidden");
 
-  const main = document.getElementById("main");
+        const main = document.getElementById("main");
 
-  const loginpage = document.createElement("div");
-  loginpage.classList.add(
-    "w-64",
-    "h-72",
-    "bg-black",
-    "rounded-xl",
-    "flex",
-    "flex-col",
-    "gap-4",
-    "items-center",
-    "justify-center",
-    "text-white",
-    "p-4"
-  );
+        const loginpage = document.createElement("div");
+        loginpage.classList.add(
+          "w-64",
+          "h-72",
+          "bg-black",
+          "rounded-xl",
+          "flex",
+          "flex-col",
+          "gap-4",
+          "items-center",
+          "justify-center",
+          "text-white",
+          "p-4"
+        );
 
-  const logo = document.createElement("img");
-  logo.src = "QuizzAi/icons/download-removebg-preview.png";
-  logo.classList.add("w-16", "h-16", "mb-3");
-  loginpage.append(logo);
+        const logo = document.createElement("img");
+        logo.src = "QuizzAi/icons/download-removebg-preview.png";
+        logo.classList.add("w-16", "h-16", "mb-3");
+        loginpage.append(logo);
 
-  const title = document.createElement("div");
-  title.textContent = "Continue with Google";
-  loginpage.append(title);
+        const title = document.createElement("div");
+        title.textContent = "Continue with Google";
+        loginpage.append(title);
 
-  const google = document.createElement("button");
-  google.id = "google";
+        const google = document.createElement("button");
+        google.id = "google";
 
-  const image = document.createElement("img");
-  image.src = "QuizzAi/icons/googleicon.png";
-  image.classList.add("h-6", "w-6");
-  google.append(image);
+        const image = document.createElement("img");
+        image.src = "QuizzAi/icons/googleicon.png";
+        image.classList.add("h-6", "w-6");
+        google.append(image);
 
-  google.classList.add(
-    "rounded-xl",
-    "border-2",
-    "border-white",
-    "px-4",
-    "py-2",
-    "cursor-pointer",
-    "bg-white",
-    "text-black",
-    "hover:bg-gray-200"
-  );
+        google.classList.add(
+          "rounded-xl",
+          "border-2",
+          "border-white",
+          "px-4",
+          "py-2",
+          "cursor-pointer",
+          "bg-white",
+          "text-black",
+          "hover:bg-gray-200"
+        );
 
-  loginpage.append(google);
-  main.append(loginpage);
+        loginpage.append(google);
+        main.append(loginpage);
 
-  // 🔥 This is the magic line
-  import("./auth.js").then(module => {
-    module.setupGoogleButton();
-  });
-}
-
+        // 🔥 This is the magic line
+        import("./auth.js").then((module) => {
+          module.setupGoogleButton();
+        });
+      }
     </script>
   </body>
 </html>
