@@ -1,0 +1,7 @@
+QuizzAi/Backend/quizzai-8117-firebase-adminsdk-fbsvc-7407485524.json
+QuizzAi/Backend/keys.env
+*.env
+*.json
+!package.json
+!package-lock.json
+node_modules/
