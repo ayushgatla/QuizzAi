@@ -614,7 +614,7 @@
     <script>
       let chats = [];
       let currentChatIndex = -1;
-
+      const API_BASE_URL = "http://127.0.0.1:5503";
       // Sidebar
       const dash = document.getElementById("dash");
       const dashToggle = document.getElementById("dashToggle");
@@ -903,14 +903,63 @@
         pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
         handlePDF(e.dataTransfer.files[0]);
       });
+      async function uploadPdfToBackend(file) {
+        try {
+          const formdata = new FormData();
+          formdata.append("file", file);
+          addMessage("📤 Uploading PDF and extracting text...", false);
+          const response = await fetch(`${API_BASE_URL}/api/pdf/upload`, {
+            method: "POST",
+            body: formdata,
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          currentPdfText = data.pdf_text || "";
+          addMessage(
+            "✅ PDF uploaded successfully! You can now generate questions.",
+            false
+          );
 
+          return data;
+        } catch (error) {
+          console.error("Upload error:", error);
+          addMessage(
+            `❌ Error uploading PDF: ${error.message}. Is your backend running on ${API_BASE_URL}?`,
+            false
+          );
+          throw error;
+        }
+      }
       async function generateMCQs(count) {
         const newest = document.getElementById("newest");
         newest.classList.remove("flex", "justify-center", "items-center");
-        rendermcqs(count);
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/generate/mcq`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              pdf_text: currentPdfText,
+              count: count,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          rendermcqs(data.mcqs);
+        } catch (error) {
+          console.error("MCQ generation error:", error);
+          chatmess.innerHTML = `<div class="text-center p-8 text-red-400">❌ Error generating MCQs: ${error.message}</div>`;
+        }
       }
 
-      async function rendermcqs(count) {
+      async function rendermcqs(mcqs) {
         const chatmess = document.getElementById("chatmess");
         const welcomemcq = document.getElementById("welcomemcq");
 
@@ -918,6 +967,7 @@
         if (chatmess) chatmess.classList.remove("hidden");
 
         chatmess.innerHTML = "";
+        let count = 8;
 
         let currect = "Option A"; // << YOU FORGOT THIS 💀
 

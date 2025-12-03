@@ -3,9 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict
 from crewai import Crew, Task, Agent
 from config import Config
-from utils.crew import get_mcq_agent
-from utils.pdf_parser import extract_text_from_pdf, validate_pdf_file, get_pdf_preview
-
+from utils.crew import run_agent,add_to_memory
+from utils.pdf_parser import extract_text
+from utils.sessions import create_session , get_session
+import os
 app = FastAPI(
     title=Config.APP_NAME,
     description="AI-powered question generation from PDFs",
@@ -20,16 +21,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/api/pdf/upload")
-async def upload(file: UploadFile = File(...)):
-    pdf_text = extract_text_from_pdf(file)
-    agent = get_mcq_agent(pdf_text)
-    task = Task(
-        name="Generate MCQs",
-        description="Generate MCQs from the given PDF text",
-        expected_output="JSON structured data containing question,options,answers,difficulty level,topic,and question type",
-        agent = agent,
-    )
-    crew = Crew(agents=[agent],tasks=[task])
-    result = crew.run()
-    return {"mcqs":result}
+@app.post("/session")
+def new_session():
+    chat_id,data = create_session()
+    return { "chatId":chat_id , "crewSessionId": data["create_session_id"]}
+
+@app.post("/upload/{chat_id}")
+async def upload(chat_id:str , file: UploadFile = File(...)):
+    session = get_session(chat_id)
+    if not session:
+        return{"error": "Invalid session"}
+    
+    file_path = f"temp_{chat_id}.pdf"
+    with open(file_path,"wb") as f:
+        f.write(file.file.read())
+
+    text = extract_text(file_path)    
+ 
+    session["pdf_text"]=text
+    session["processed"]=True
+
+    add_to_memory(session["crew_session_id"],text)
+    os.remove(file_path)
+    return {"message": "PDF processed & memory updated"}
+
+@app.post("/generate/chat_id")
+def generate(chat_id:str ,type:str,count:int):
+    session = get_session(chat_id)
+    if not session:
+        return {"error": "Invalid session"}
+    crew_id = session["crew_session_id"]
+    prompt=""
+    if type=="mcq":
+        prompt = f"Generate {count} Mcqs from the stored pdf content and given them in a json file with question,answer,correct answer,explanation why it is correct"
+    elif type=="short":
+        prompt = f"Generate {count} short questions from the stored pdf content and given them in a json file with question,answer,correct answer,explanation why it is correct"
+    elif type=="long":
+        prompt = f"Generate {count} long questions from the stored pdf content and given them in a json file with question,answer,correct answer,explanation why it is correct"
+    result = run_agent(crew_id,prompt)    
+    return {"result":result}
+
+
+
+    
