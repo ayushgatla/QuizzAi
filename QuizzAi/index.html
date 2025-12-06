@@ -691,16 +691,34 @@
       const chatsarea = document.getElementById("chatsarea");
 
       newchat.addEventListener("click", () => {
-        // Save current chat messages before switching
-        saveCurrentChat();
-
-        // Create new empty chat
-        chats.push([]);
-        currentChatIndex = chats.length - 1;
-
-        renderChatButtons();
-        loadChat();
+          saveCurrentChat();
+           chats.push(createNewchat());
+            renderChatButtons();
+            loadChat();
       });
+      async function createNewchat() {
+
+              const res = await fetch(`${API_BASE_URL}/session`);
+              const data = await res.json();
+
+              const chat_id = data.chat_id;
+
+              const newChat = {
+                chat_id: chat_id,
+                created: Date.now(),
+                messages: []  
+              };
+
+              chats.push(newChat);
+
+              currentChatIndex = chats.length - 1;
+
+              saveToStorage();
+
+              console.log("Created new chat:", chat_id);
+
+  return newChat;
+}
 
       function saveCurrentChat() {
         if (currentChatIndex >= 0) {
@@ -936,13 +954,13 @@
         const newest = document.getElementById("newest");
         newest.classList.remove("flex", "justify-center", "items-center");
         try {
-          const response = await fetch(`${API_BASE_URL}/api/generate/mcq`, {
+          const response = await fetch(`${API_BASE_URL}/generate/${chat_id}?type=mcq&count=${count}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              pdf_text: currentPdfText,
+              pdf_text: result,
               count: count,
             }),
           });
