@@ -46,7 +46,7 @@ class AgentManeger:
     def run_agent(self,prompt:str,session_id:str)->str:
         if session_id not in self.agents:
             raise ValueError(
-                f"❌ No agent found for session: {session_id}\n"
+                f"No agent found for session: {session_id}\n"
                 f"Available sessions: {list(self.agents.keys())}\n"
                 f"Did you forget to create the agent first?"
             )
@@ -56,7 +56,7 @@ class AgentManeger:
             response = agent.run(prompt)
             return response
         except Exception as ex:
-            print(f"❌ Error running agent: {str(ex)}")
+            print(f" Error running agent: {str(ex)}")
             raise
 
     def get_agent_info(self,session_id:str)->Optional[dict]:

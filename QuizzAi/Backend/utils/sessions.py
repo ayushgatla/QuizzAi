@@ -51,11 +51,11 @@ class SessionManager:
         return True
     
     def delete_session(self, chat_id: str) -> bool:
-        """Delete a session"""
+       
         if chat_id in self.sessions:
             del self.sessions[chat_id]
             return True
         return False
 
-# Global instance (singleton pattern)
+
 session_manager = SessionManager()
