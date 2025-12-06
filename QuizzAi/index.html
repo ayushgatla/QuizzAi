@@ -617,7 +617,7 @@
     let currentChatIndex = -1;
     let currentChatId = null; // THIS IS CRITICAL - you were missing this
     let currentPdfText = null;
-    const API_BASE_URL = "http://127.0.0.1:5503";
+    const API_BASE_URL = "http://127.0.0.1:8080";
 
     // ==================== DOM ELEMENTS ====================
     const dash = document.getElementById("dash");
@@ -640,7 +640,7 @@
     const pdfUpload = document.getElementById("pdfUpload");
     const mainContent = document.getElementById("mainContent");
 
-    // ==================== ANIMATIONS ====================
+    
     const skill = document.getElementsByClassName("ani");
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -678,24 +678,37 @@
     dashClose?.addEventListener("click", closeDash);
     backdrop?.addEventListener("click", closeDash);
 
-    // ==================== STORAGE FUNCTIONS ====================
+    
     function saveToStorage() {
       localStorage.setItem("quizzChats", JSON.stringify(chats));
       localStorage.setItem("currentChatIndex", currentChatIndex);
     }
 
-    function loadFromStorage() {
-      const stored = localStorage.getItem("quizzChats");
-      const index = localStorage.getItem("currentChatIndex");
+   function loadFromStorage() {
+  const stored = localStorage.getItem("quizzChats");
+  const index = localStorage.getItem("currentChatIndex");
 
-      if (stored) {
-        chats = JSON.parse(stored);
-        currentChatIndex = index !== null ? parseInt(index) : -1;
-      } else {
-        chats = [];
-        currentChatIndex = -1;
-      }
+  try {
+    const parsed = JSON.parse(stored);
+
+   
+    if (Array.isArray(parsed)) {
+      chats = parsed;
+    } else {
+      console.warn("Invalid chat data, resetting storage.");
+      chats = [];
+      localStorage.removeItem("quizzChats");
     }
+
+  } catch (e) {
+    console.error("Corrupted storage, clearing...", e);
+    chats = [];
+    localStorage.removeItem("quizzChats");
+  }
+
+  currentChatIndex = index !== null ? parseInt(index) : -1;
+}
+
 
     // ==================== SESSION MANAGEMENT ====================
     async function createNewChat() {
@@ -960,8 +973,7 @@
 
         addMessage("📤 Uploading PDF and extracting text...", false);
 
-        // USE THE CORRECT ENDPOINT WITH CHAT_ID
-        const response = await fetch(`${API_BASE_URL}/upload/${currentChatId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/pdf/upload/${currentChatId}`, {
           method: "POST",
           body: formData,
         });
@@ -972,7 +984,7 @@
 
         const data = await response.json();
         
-        // Update current chat
+       
         if (chats[currentChatIndex]) {
           chats[currentChatIndex].pdfUploaded = true;
           chats[currentChatIndex].pdfFilename = data.filename;
@@ -1008,7 +1020,7 @@
       handlePDF(e.dataTransfer.files[0]);
     });
 
-    // ==================== MCQ GENERATION ====================
+
     async function generateMCQs(count) {
       if (!currentChatId) {
         alert("Please create a new chat first!");

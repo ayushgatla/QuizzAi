@@ -27,7 +27,7 @@ app.add_middleware(
 def new_session():
     chat_id,data = session_manager.create_session()
     return { "chat_id":chat_id , 
-            "crew_session_id": data["create_session_id"],
+            "crew_session_id": data["crew_session_id"],
             "created_at": data["created_at"]
             }
 
@@ -67,7 +67,7 @@ async def upload(chat_id:str , file: UploadFile = File(...)):
     session["pdf_text"]=text
     session["processed"]=True
 
-    agent_maneger.add_to_memory(session["crew_session_id"],text)
+    agent_maneger.add_to_context(session["crew_session_id"],text)
     os.remove(file_path)
     return {"message": "PDF processed & memory updated",
             "text": text,
