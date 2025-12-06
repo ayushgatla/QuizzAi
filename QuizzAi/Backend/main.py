@@ -21,14 +21,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-API_BASE_URL = "http://127.0.0.1:5503"
 
 
 @app.post("/session")
 def new_session():
     chat_id,data = session_manager.create_session()
-    return { "chatId":chat_id , 
-            "crewSessionId": data["create_session_id"],
+    return { "chat_id":chat_id , 
+            "crew_session_id": data["create_session_id"],
             "created_at": data["created_at"]
             }
 
@@ -146,13 +145,23 @@ def generate(chat_id:str ,typeof:str,count:int ):
     return{
         "type":typeof,
         "count":count,
-        "questions":questions
-
+        "questions":questions,
     }
 
+@app.get("/")
+def health_check():
+    return {
+        "status": "healthy",
+        "app": "QuizzAI API",
+        "version": "1.0.0"
+    }
 
-
-
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "active_sessions": len(session_manager.sessions),
+            }
         
 
 

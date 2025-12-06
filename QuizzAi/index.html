@@ -614,7 +614,9 @@
     <script>
       let chats = [];
       let currentChatIndex = -1;
-      const API_BASE_URL = "http://127.0.0.1:5503";
+      let currentChatId=null
+      let currentPdfId=null
+      const API_BASE_URL = "http://127.0.0.1:8080";
       // Sidebar
       const dash = document.getElementById("dash");
       const dashToggle = document.getElementById("dashToggle");
@@ -697,27 +699,34 @@
             loadChat();
       });
       async function createNewchat() {
-
-              const res = await fetch(`${API_BASE_URL}/session`);
+          try{
+              const res = await fetch(`${API_BASE_URL}/session`,{
+                method:"POST"
+              });
               const data = await res.json();
-
-              const chat_id = data.chat_id;
+              console.log("session created!!",data)
 
               const newChat = {
                 chat_id: chat_id,
+                crew_session_id:data.crew_session_id,
                 created: Date.now(),
-                messages: []  
+                messages: [] ,
+                 uploadedpdf:false,
+                pdfname:null
+
               };
-
+              const chat_id = data.chat_id;
               chats.push(newChat);
-
               currentChatIndex = chats.length - 1;
-
               saveToStorage();
-
               console.log("Created new chat:", chat_id);
-
-  return newChat;
+              return newChat;
+            }
+            catch (error) {
+              console.error("Error creating session:", error);
+              addMessage(`Error creating session: ${error.message}`, false);
+              throw error;
+      }
 }
 
       function saveCurrentChat() {
@@ -954,15 +963,12 @@
         const newest = document.getElementById("newest");
         newest.classList.remove("flex", "justify-center", "items-center");
         try {
-          const response = await fetch(`${API_BASE_URL}/generate/${chat_id}?type=mcq&count=${count}`, {
+          const response = await fetch(`${API_BASE_URL}/generate/${currentChatId}?type=mcq&count=${count}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              pdf_text: result,
-              count: count,
-            }),
+           
           });
 
           if (!response.ok) {
@@ -970,7 +976,7 @@
           }
 
           const data = await response.json();
-          rendermcqs(data.mcqs);
+          rendermcqs(data.questions);
         } catch (error) {
           console.error("MCQ generation error:", error);
           chatmess.innerHTML = `<div class="text-center p-8 text-red-400">❌ Error generating MCQs: ${error.message}</div>`;
