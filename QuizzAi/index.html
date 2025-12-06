@@ -612,493 +612,554 @@
     </main>
 
     <script>
-      let chats = [];
-      let currentChatIndex = -1;
-      let currentChatId=null
-      let currentPdfId=null
-      const API_BASE_URL = "http://127.0.0.1:8080";
-      // Sidebar
-      const dash = document.getElementById("dash");
-      const dashToggle = document.getElementById("dashToggle");
-      const dashClose = document.getElementById("dashClose");
-      const backdrop = document.getElementById("backdrop");
-      //thenewbutton
-      const dashnew = document.getElementById("dashnew");
-      const skill = document.getElementsByClassName("ani");
-      const observer = new IntersectionObserver((enteries) => {
-        enteries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("show");
-          } else {
-            entry.target.classList.remove("show");
-          }
+    // ==================== STATE MANAGEMENT ====================
+    let chats = [];
+    let currentChatIndex = -1;
+    let currentChatId = null; // THIS IS CRITICAL - you were missing this
+    let currentPdfText = null;
+    const API_BASE_URL = "http://127.0.0.1:5503";
+
+    // ==================== DOM ELEMENTS ====================
+    const dash = document.getElementById("dash");
+    const dashToggle = document.getElementById("dashToggle");
+    const dashClose = document.getElementById("dashClose");
+    const backdrop = document.getElementById("backdrop");
+    const dashnew = document.getElementById("dashnew");
+    const dashn = document.getElementById("dashn");
+    const newchat = document.getElementById("newchat");
+    const chatsarea = document.getElementById("chatsarea");
+    const textarea = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+    const messagesContainer = document.getElementById("messagesContainer");
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    const chatMessages = document.getElementById("chatMessages");
+    const pdfZone = document.getElementById("pdfZone");
+    const pdfInput = document.getElementById("pdfInput");
+    const pdfViewer = document.getElementById("pdfViewer");
+    const pdfPlaceholder = document.getElementById("pdfPlaceholder");
+    const pdfUpload = document.getElementById("pdfUpload");
+    const mainContent = document.getElementById("mainContent");
+
+    // ==================== ANIMATIONS ====================
+    const skill = document.getElementsByClassName("ani");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show");
+        } else {
+          entry.target.classList.remove("show");
+        }
+      });
+    }, {});
+    Array.from(skill).forEach((el) => observer.observe(el));
+
+    // ==================== SIDEBAR CONTROLS ====================
+    function openDash() {
+      dash.classList.remove("-translate-x-full");
+      dash.classList.add("lg:translate-x-0");
+      mainContent.classList.add("lg:ml-64");
+      backdrop.classList.remove("hidden");
+    }
+
+    function closeDash() {
+      dash.classList.add("-translate-x-full");
+      dash.classList.remove("lg:translate-x-0");
+      mainContent.classList.remove("lg:ml-64");
+      backdrop.classList.add("hidden");
+    }
+
+    dashnew?.addEventListener("click", () => {
+      dash.classList.contains("-translate-x-full") ? openDash() : closeDash();
+    });
+    dashn?.addEventListener("click", () => {
+      dash.classList.contains("-translate-x-full") ? openDash() : closeDash();
+    });
+    dashToggle?.addEventListener("click", openDash);
+    dashClose?.addEventListener("click", closeDash);
+    backdrop?.addEventListener("click", closeDash);
+
+    // ==================== STORAGE FUNCTIONS ====================
+    function saveToStorage() {
+      localStorage.setItem("quizzChats", JSON.stringify(chats));
+      localStorage.setItem("currentChatIndex", currentChatIndex);
+    }
+
+    function loadFromStorage() {
+      const stored = localStorage.getItem("quizzChats");
+      const index = localStorage.getItem("currentChatIndex");
+
+      if (stored) {
+        chats = JSON.parse(stored);
+        currentChatIndex = index !== null ? parseInt(index) : -1;
+      } else {
+        chats = [];
+        currentChatIndex = -1;
+      }
+    }
+
+    // ==================== SESSION MANAGEMENT ====================
+    async function createNewChat() {
+      try {
+        // Call backend to create session
+        const res = await fetch(`${API_BASE_URL}/session`, {
+          method: "POST"
         });
-      }, {});
-      Array.from(skill).forEach((e1) => observer.observe(e1));
-      dashnew?.addEventListener("click", () => {
-        if (dash.classList.contains("-translate-x-full")) {
-          openDash();
-        } else {
-          closeDash();
-        }
-      });
-      const dashn = document.getElementById("dashn");
-      dashn?.addEventListener("click", () => {
-        if (dash.classList.contains("-translate-x-full")) {
-          openDash();
-        } else {
-          closeDash();
-        }
-      });
+        
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
+        const data = await res.json();
+        console.log("✅ Session created:", data);
 
-      function openDash() {
-        dash.classList.remove("-translate-x-full");
-        dash.classList.add("lg:translate-x-0");
-        mainContent.classList.add("lg:ml-64");
+        // Create chat object with backend session info
+        const newChat = {
+          chat_id: data.chat_id,
+          crew_session_id: data.crew_session_id,
+          created: Date.now(),
+          messages: [],
+          pdfUploaded: false,
+          pdfFilename: null
+        };
 
-        backdrop.classList.remove("hidden");
+        chats.push(newChat);
+        currentChatIndex = chats.length - 1;
+        currentChatId = data.chat_id; // SET THE CURRENT CHAT ID
+        
+        saveToStorage();
+        return newChat;
+      } catch (error) {
+        console.error("❌ Error creating session:", error);
+        addMessage(`Error creating session: ${error.message}`, false);
+        throw error;
       }
+    }
 
-      function closeDash() {
-        dash.classList.add("-translate-x-full");
-        dash.classList.remove("lg:translate-x-0");
-        mainContent.classList.remove("lg:ml-64");
-        backdrop.classList.add("hidden");
-      }
+    // ==================== CHAT MANAGEMENT ====================
+    newchat.addEventListener("click", async () => {
+      saveCurrentChat();
+      const newChat = await createNewChat();
+      renderChatButtons();
+      loadChat();
+      
+      // Reset PDF viewer
+      pdfViewer.classList.add("hidden");
+      pdfPlaceholder.classList.remove("hidden");
+      currentPdfText = null;
+    });
 
-      dashToggle?.addEventListener("click", openDash);
-      dashClose?.addEventListener("click", closeDash);
-      backdrop?.addEventListener("click", closeDash);
-
-      // New Chat
-      function saveToStorage() {
-        localStorage.setItem("quizzChats", JSON.stringify(chats));
-        localStorage.setItem("currentChatIndex", currentChatIndex);
-      }
-
-      function loadFromStorage() {
-        const stored = localStorage.getItem("quizzChats");
-        const index = localStorage.getItem("currentChatIndex");
-
-        if (stored) {
-          chats = JSON.parse(stored);
-          currentChatIndex = index !== null ? parseInt(index) : -1;
-        } else {
-          chats = [];
-          currentChatIndex = -1;
-        }
-      }
-
-      const newchat = document.getElementById("newchat");
-      const chatsarea = document.getElementById("chatsarea");
-
-      newchat.addEventListener("click", () => {
-          saveCurrentChat();
-           chats.push(createNewchat());
-            renderChatButtons();
-            loadChat();
-      });
-      async function createNewchat() {
-          try{
-              const res = await fetch(`${API_BASE_URL}/session`,{
-                method:"POST"
-              });
-              const data = await res.json();
-              console.log("session created!!",data)
-
-              const newChat = {
-                chat_id: chat_id,
-                crew_session_id:data.crew_session_id,
-                created: Date.now(),
-                messages: [] ,
-                 uploadedpdf:false,
-                pdfname:null
-
-              };
-              const chat_id = data.chat_id;
-              chats.push(newChat);
-              currentChatIndex = chats.length - 1;
-              saveToStorage();
-              console.log("Created new chat:", chat_id);
-              return newChat;
-            }
-            catch (error) {
-              console.error("Error creating session:", error);
-              addMessage(`Error creating session: ${error.message}`, false);
-              throw error;
-      }
-}
-
-      function saveCurrentChat() {
-        if (currentChatIndex >= 0) {
-          let msgs = Array.from(chatMessages.children).map((el) => {
-            let text = el.querySelector("p").innerText;
-            let isUser = el.classList.contains("justify-end");
-            return { text, isUser };
-          });
-          chats[currentChatIndex] = msgs;
-        }
+    function saveCurrentChat() {
+      if (currentChatIndex >= 0 && chats[currentChatIndex]) {
+        let msgs = Array.from(chatMessages.children).map((el) => {
+          let text = el.querySelector("p")?.innerText || "";
+          let isUser = el.classList.contains("justify-end");
+          return { text, isUser };
+        });
+        chats[currentChatIndex].messages = msgs;
         saveToStorage();
       }
+    }
 
-      function renderChatButtons() {
-        chatsarea.innerHTML = "";
-        chats.forEach((c, i) => {
-          const chat = document.createElement("div");
+    function renderChatButtons() {
+      chatsarea.innerHTML = "";
+      chats.forEach((chat, i) => {
+        const chatBtn = document.createElement("div");
+        chatBtn.className = `flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer group
+          ${i === currentChatIndex ? "bg-blue-600" : "hover:bg-gray-800"}`;
 
-          chat.className = `flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer group
-             ${i === currentChatIndex ? "bg-blue-600" : "hover:bg-gray-800"}`;
+        const label = chat.pdfFilename 
+          ? `${chat.pdfFilename.slice(0, 20)}...` 
+          : `Chat ${i + 1}`;
 
-          chat.innerHTML = `
-            <span class="text-sm truncate">Chat ${i + 1}</span>
-            <button class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-400 transition-opacity">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          `;
+        chatBtn.innerHTML = `
+          <span class="text-sm truncate">${label}</span>
+          <button class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-400 transition-opacity delete-chat-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        `;
 
-          chat.addEventListener("click", () => {
+        chatBtn.addEventListener("click", (e) => {
+          if (!e.target.closest('.delete-chat-btn')) {
             saveCurrentChat();
             currentChatIndex = i;
+            currentChatId = chat.chat_id;
             renderChatButtons();
             loadChat();
-            saveToStorage();
-          });
-
-          chat.querySelector("button").onclick = (e) => {
-            e.stopPropagation();
-            chats.splice(i, 1);
-            if (currentChatIndex === i) {
-              currentChatIndex = -1;
-              chatMessages.innerHTML = "";
-              welcomeScreen.classList.remove("hidden");
-            }
-            saveToStorage();
-            renderChatButtons();
-          };
-
-          chatsarea.appendChild(chat);
-        });
-      }
-
-      // Tabs
-      function switchTab(tabName) {
-        document.querySelectorAll(".tab-btn").forEach((btn) => {
-          btn.classList.remove("active", "bg-blue-600", "text-white");
-          btn.classList.add("text-gray-400", "hover:text-white");
+          }
         });
 
-        const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-        if (activeBtn) {
-          activeBtn.classList.add("active", "bg-blue-600", "text-white");
-          activeBtn.classList.remove("text-gray-400", "hover:text-white");
-        }
-
-        const workspaces = {
-          chat: document.getElementById("messagesContainer"),
-          mcq: document.getElementById("Mcqssection"),
-          short: document.getElementById("shortsection"),
-          long: document.getElementById("longsection"),
+        chatBtn.querySelector(".delete-chat-btn").onclick = (e) => {
+          e.stopPropagation();
+          chats.splice(i, 1);
+          if (currentChatIndex === i) {
+            currentChatIndex = -1;
+            currentChatId = null;
+            chatMessages.innerHTML = "";
+            welcomeScreen.classList.remove("hidden");
+            chatMessages.classList.add("hidden");
+          }
+          saveToStorage();
+          renderChatButtons();
         };
 
-        Object.keys(workspaces).forEach((key) => {
-          const el = workspaces[key];
-          if (!el) return;
-          if (key === tabName) el.classList.remove("hidden");
-          else el.classList.add("hidden");
-        });
-        const chatsinput = document.getElementById("chatsinput");
-        if (chatsinput) {
-          if (tabName == "chat") chatsinput.classList.remove("hidden");
-          else chatsinput.classList.add("hidden");
-        }
-        if (tabName === "chat" && typeof loadChat === "function") loadChat();
-      }
-      //NAMEOFTSBS
-
-      // Textarea
-      const textarea = document.getElementById("messageInput");
-      const sendButton = document.getElementById("sendButton");
-      const messagesContainer = document.getElementById("messagesContainer");
-      const welcomeScreen = document.getElementById("welcomeScreen");
-      const chatMessages = document.getElementById("chatMessages");
-
-      textarea.addEventListener("input", () => {
-        textarea.style.height = "auto";
-        textarea.style.height = Math.min(textarea.scrollHeight, 128) + "px";
-        sendButton.disabled = !textarea.value.trim();
+        chatsarea.appendChild(chatBtn);
       });
+    }
 
-      function addMessage(text, isUser = true) {
+    function loadChat() {
+      chatMessages.innerHTML = "";
+      
+      if (currentChatIndex < 0 || !chats[currentChatIndex]) {
+        welcomeScreen.classList.remove("hidden");
+        chatMessages.classList.add("hidden");
+        return;
+      }
+
+      const messages = chats[currentChatIndex].messages || [];
+      currentChatId = chats[currentChatIndex].chat_id;
+
+      if (messages.length === 0) {
+        welcomeScreen.classList.remove("hidden");
+        chatMessages.classList.add("hidden");
+      } else {
         welcomeScreen.classList.add("hidden");
         chatMessages.classList.remove("hidden");
+        messages.forEach((msg) => addMessage(msg.text, msg.isUser));
+      }
+    }
 
-        const msg = document.createElement("div");
-        msg.className = `flex ${isUser ? "justify-end" : "justify-start"}`;
-        msg.innerHTML = `
-              <div class="${
-                isUser ? "bg-blue-600" : "bg-gray-800"
-              } rounded-2xl px-4 py-3 max-w-[80%]">
-                <p class="text-sm">${text}</p>
+    // ==================== TAB SWITCHING ====================
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.classList.remove("active", "bg-blue-600", "text-white");
+        btn.classList.add("text-gray-400", "hover:text-white");
+      });
+
+      const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add("active", "bg-blue-600", "text-white");
+        activeBtn.classList.remove("text-gray-400", "hover:text-white");
+      }
+
+      const workspaces = {
+        chat: document.getElementById("messagesContainer"),
+        mcq: document.getElementById("Mcqssection"),
+        short: document.getElementById("shortsection"),
+        long: document.getElementById("longsection"),
+      };
+
+      Object.keys(workspaces).forEach((key) => {
+        const el = workspaces[key];
+        if (!el) return;
+        el.classList.toggle("hidden", key !== tabName);
+      });
+
+      const chatsinput = document.getElementById("chatsinput");
+      if (chatsinput) {
+        chatsinput.classList.toggle("hidden", tabName !== "chat");
+      }
+
+      if (tabName === "chat") loadChat();
+    }
+
+    // ==================== MESSAGE HANDLING ====================
+    textarea.addEventListener("input", () => {
+      textarea.style.height = "auto";
+      textarea.style.height = Math.min(textarea.scrollHeight, 128) + "px";
+      sendButton.disabled = !textarea.value.trim();
+    });
+
+    function addMessage(text, isUser = true) {
+      welcomeScreen.classList.add("hidden");
+      chatMessages.classList.remove("hidden");
+
+      const msg = document.createElement("div");
+      msg.className = `flex ${isUser ? "justify-end" : "justify-start"}`;
+      msg.innerHTML = `
+        <div class="${isUser ? "bg-blue-600" : "bg-gray-800"} rounded-2xl px-4 py-3 max-w-[80%]">
+          <p class="text-sm whitespace-pre-wrap">${text}</p>
+        </div>
+      `;
+      chatMessages.appendChild(msg);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = textarea.value.trim();
+      if (!text) return;
+
+      if (!currentChatId) {
+        addMessage("⚠️ Please create a new chat first!", false);
+        return;
+      }
+
+      addMessage(text, true);
+      textarea.value = "";
+      textarea.style.height = "auto";
+      sendButton.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/chat/${currentChatId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, isUser: true })
+        });
+
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+        const data = await res.json();
+        addMessage(data.response, false);
+        saveCurrentChat();
+      } catch (error) {
+        console.error("❌ Error sending message:", error);
+        addMessage(`Error: ${error.message}. Is your backend running?`, false);
+      }
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // ==================== PDF UPLOAD ====================
+    async function handlePDF(file) {
+      if (!file) return;
+
+      const isPdf = 
+        (file.type && file.type === "application/pdf") ||
+        (file.name && file.name.toLowerCase().endsWith(".pdf"));
+
+      if (!isPdf) {
+        alert("Please upload a PDF file");
+        return;
+      }
+
+      // Display PDF
+      const url = URL.createObjectURL(file);
+      pdfViewer.src = url;
+      pdfViewer.classList.remove("hidden");
+      pdfPlaceholder.classList.add("hidden");
+      pdfViewer.onload = () => URL.revokeObjectURL(url);
+
+      // Upload to backend
+      await uploadPdfToBackend(file);
+    }
+
+    async function uploadPdfToBackend(file) {
+      if (!currentChatId) {
+        addMessage("⚠️ Please create a new chat first!", false);
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        addMessage("📤 Uploading PDF and extracting text...", false);
+
+        // USE THE CORRECT ENDPOINT WITH CHAT_ID
+        const response = await fetch(`${API_BASE_URL}/upload/${currentChatId}`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Update current chat
+        if (chats[currentChatIndex]) {
+          chats[currentChatIndex].pdfUploaded = true;
+          chats[currentChatIndex].pdfFilename = data.filename;
+          saveToStorage();
+          renderChatButtons();
+        }
+
+        addMessage("✅ PDF uploaded successfully! You can now generate questions.", false);
+        return data;
+      } catch (error) {
+        console.error("❌ Upload error:", error);
+        addMessage(`❌ Error uploading PDF: ${error.message}`, false);
+        throw error;
+      }
+    }
+
+    pdfZone.addEventListener("click", () => pdfInput.click());
+    pdfInput.addEventListener("change", (e) => handlePDF(e.target.files[0]));
+    pdfUpload.addEventListener("change", (e) => handlePDF(e.target.files[0]));
+
+    pdfZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      pdfZone.classList.add("border-blue-500", "bg-blue-500/10");
+    });
+
+    pdfZone.addEventListener("dragleave", () => {
+      pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
+    });
+
+    pdfZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
+      handlePDF(e.dataTransfer.files[0]);
+    });
+
+    // ==================== MCQ GENERATION ====================
+    async function generateMCQs(count) {
+      if (!currentChatId) {
+        alert("Please create a new chat first!");
+        return;
+      }
+
+      if (!chats[currentChatIndex]?.pdfUploaded) {
+        alert("Please upload a PDF first!");
+        return;
+      }
+
+      const newest = document.getElementById("newest");
+      const chatmess = document.getElementById("chatmess");
+      const welcomemcq = document.getElementById("welcomemcq");
+
+      newest.classList.remove("flex", "justify-center", "items-center");
+      welcomemcq?.classList.add("hidden");
+      chatmess.classList.remove("hidden");
+
+      chatmess.innerHTML = '<div class="text-center p-8">⏳ Generating MCQs...</div>';
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/generate/${currentChatId}?type=mcq&count=${count}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Generated MCQs:", data);
+        
+        renderMCQs(data.questions);
+      } catch (error) {
+        console.error("❌ MCQ generation error:", error);
+        chatmess.innerHTML = `<div class="text-center p-8 text-red-400">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    function renderMCQs(mcqs) {
+      const chatmess = document.getElementById("chatmess");
+      chatmess.innerHTML = "";
+
+      if (!Array.isArray(mcqs) || mcqs.length === 0) {
+        chatmess.innerHTML = '<div class="text-center p-8 text-yellow-400">⚠️ No MCQs generated</div>';
+        return;
+      }
+
+      mcqs.forEach((mcq, i) => {
+        const questionNumber = i + 1;
+        const block = document.createElement("div");
+        block.className = "m-4 p-4 rounded-lg bg-gray-800/60 text-sm text-gray-200 w-4/5";
+
+        const options = (mcq.options || ["Option A", "Option B", "Option C", "Option D"])
+          .map((opt, idx) => {
+            const optionLetter = String.fromCharCode(65 + idx); // A, B, C, D
+            return `
+              <div class="option-wrapper relative mb-8">
+                <span class="result-tag absolute -bottom-6 left-2 text-sm font-semibold"></span>
+                <div id="q${questionNumber}-opt${idx}" 
+                     class="optionblock border-4 border-blue-800/30 rounded-xl p-4 transition-all">
+                  <button id="q${questionNumber}-opt${idx}-btn"
+                          onclick="checkAnswer(${questionNumber}, '${optionLetter}', '${mcq.correct}')"
+                          class="text-blue-500 hover:text-blue-400 w-full text-left">
+                    ${optionLetter}. ${opt}
+                  </button>
+                </div>
               </div>
             `;
-        chatMessages.appendChild(msg);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
+          })
+          .join("");
 
-      function sendMessage() {
-        const text = textarea.value.trim();
-        if (!text) return;
-
-        addMessage(text, true);
-        textarea.value = "";
-        textarea.style.height = "auto";
-        sendButton.disabled = true;
-
-        // Simulate response
-        setTimeout(() => {
-          addMessage(
-            "This is a demo response. Connect to your backend to get real answers!",
-            false
-          );
-        }, 1000);
-      }
-
-      sendButton.addEventListener("click", sendMessage);
-      textarea.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-
-      // PDF Upload
-      const pdfZone = document.getElementById("pdfZone");
-      const pdfInput = document.getElementById("pdfInput");
-      const pdfViewer = document.getElementById("pdfViewer");
-      const pdfPlaceholder = document.getElementById("pdfPlaceholder");
-      const pdfUpload = document.getElementById("pdfUpload");
-
-      function handlePDF(file) {
-        if (!file) return;
-
-        // Some OS/browsers may not provide a proper MIME type for the file
-        // (file.type can be an empty string). Accept based on MIME or filename.
-        const isPdf =
-          (file.type && file.type === "application/pdf") ||
-          (file.name && file.name.toLowerCase().endsWith(".pdf"));
-
-        if (!isPdf) {
-          alert("Please upload a PDF file");
-          return;
-        }
-
-        // Use object URL which is more reliable and handles larger files better
-        // than data URLs. Revoke the URL after the iframe finishes loading.
-        const url = URL.createObjectURL(file);
-        pdfViewer.src = url;
-        pdfViewer.classList.remove("hidden");
-        pdfPlaceholder.classList.add("hidden");
-
-        pdfViewer.onload = () => {
-          try {
-            URL.revokeObjectURL(url);
-          } catch (e) {
-            // ignore
-          }
-        };
-
-        uploadPdfToBackend(file);
-      }
-
-      pdfZone.addEventListener("click", () => pdfInput.click());
-      pdfInput.addEventListener("change", (e) => handlePDF(e.target.files[0]));
-      pdfUpload.addEventListener("change", (e) => handlePDF(e.target.files[0]));
-
-      pdfZone.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        pdfZone.classList.add("border-blue-500", "bg-blue-500/10");
-      });
-
-      pdfZone.addEventListener("dragleave", () => {
-        pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
-      });
-
-      pdfZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
-        handlePDF(e.dataTransfer.files[0]);
-      });
-      async function uploadPdfToBackend(file) {
-        try {
-          const formdata = new FormData();
-          formdata.append("file", file);
-          addMessage("📤 Uploading PDF and extracting text...", false);
-          const response = await fetch(`${API_BASE_URL}/api/pdf/upload`, {
-            method: "POST",
-            body: formdata,
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          currentPdfText = data.pdf_text || "";
-          addMessage(
-            "✅ PDF uploaded successfully! You can now generate questions.",
-            false
-          );
-
-          return data;
-        } catch (error) {
-          console.error("Upload error:", error);
-          addMessage(
-            `❌ Error uploading PDF: ${error.message}. Is your backend running on ${API_BASE_URL}?`,
-            false
-          );
-          throw error;
-        }
-      }
-      async function generateMCQs(count) {
-        const newest = document.getElementById("newest");
-        newest.classList.remove("flex", "justify-center", "items-center");
-        try {
-          const response = await fetch(`${API_BASE_URL}/generate/${currentChatId}?type=mcq&count=${count}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-           
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          rendermcqs(data.questions);
-        } catch (error) {
-          console.error("MCQ generation error:", error);
-          chatmess.innerHTML = `<div class="text-center p-8 text-red-400">❌ Error generating MCQs: ${error.message}</div>`;
-        }
-      }
-
-      async function rendermcqs(mcqs) {
-        const chatmess = document.getElementById("chatmess");
-        const welcomemcq = document.getElementById("welcomemcq");
-
-        if (welcomemcq) welcomemcq.classList.add("hidden");
-        if (chatmess) chatmess.classList.remove("hidden");
-
-        chatmess.innerHTML = "";
-        let count = 8;
-
-        let currect = "Option A"; // << YOU FORGOT THIS 💀
-
-        for (let i = 0; i < count; i++) {
-          const questionNumber = i + 1;
-
-          const block = document.createElement("div");
-          block.className =
-            "m-4 p-4 rounded-lg bg-gray-800/60 text-sm text-gray-200 w-4/5";
-
-          const options = ["Option A", "Option B", "Option C", "Option D"]
-            .map(
-              (opt) => `
-            <div class="option-wrapper relative mb-8">
-
-              <span class="result-tag absolute -bottom-6 left-2 text-sm font-semibold"></span>
-
-              <div id="${questionNumber}-${opt}"
-                   class="optionblock border-4 border-blue-800/30 rounded-xl p-4">
-                <button
-                id="${questionNumber}-${opt}-"
-                onclick="check('${opt}', '${currect}', '${questionNumber}')"
-                        class="text-blue-500">
-                  ${opt}
-                </button>
-              </div>
-
-            </div>
-          `
-            )
-            .join("");
-
-          block.innerHTML = `
+        block.innerHTML = `
           <div class="questionblock">
-            <p class="font-semibold mb-2">Sample Question ${questionNumber}: This is a demo MCQ?</p>
+            <p class="font-semibold mb-4">${questionNumber}. ${mcq.question || "Sample question"}</p>
             ${options}
+            ${mcq.explanation ? `<div class="mt-4 p-3 bg-gray-700/50 rounded hidden explanation-${questionNumber}">
+              <p class="text-xs text-gray-300">💡 ${mcq.explanation}</p>
+            </div>` : ''}
           </div>
         `;
 
-          chatmess.appendChild(block);
-        }
-      }
+        chatmess.appendChild(block);
+      });
+    }
 
-      async function check(selected, correct, q) {
-        const options = ["Option A", "Option B", "Option C", "Option D"];
+    function checkAnswer(questionNum, selected, correct) {
+      const optionCount = 4;
+      
+      for (let i = 0; i < optionCount; i++) {
+        const optionLetter = String.fromCharCode(65 + i);
+        const block = document.getElementById(`q${questionNum}-opt${i}`);
+        const button = document.getElementById(`q${questionNum}-opt${i}-btn`);
+        const wrapper = block?.parentElement;
+        const tag = wrapper?.querySelector(".result-tag");
 
-        for (let opt of options) {
-          const block = document.getElementById(`${q}-${opt}`);
-          const button = document.getElementById(`${q}-${opt}-`);
-          const wrapper = block.parentElement;
-          const tag = wrapper.querySelector(".result-tag");
-          button.disabled = true;
+        if (!block || !button) continue;
 
-          // Reset
-          block.classList.remove("border-green-800/80", "border-red-800/80");
-          block.classList.add("border-blue-800/30");
+        button.disabled = true;
+        block.classList.remove("border-green-800/80", "border-red-800/80");
+        block.classList.add("border-blue-800/30");
 
+        if (tag) {
           tag.textContent = "";
-          tag.className =
-            "result-tag absolute -bottom-6 left-2 text-sm font-semibold";
+          tag.className = "result-tag absolute -bottom-6 left-2 text-sm font-semibold";
+        }
 
-          // Correct
-          if (opt === correct) {
-            block.classList.replace(
-              "border-blue-800/30",
-              "border-green-800/80"
-            );
-            tag.textContent = "✔ Correct";
+        if (optionLetter === correct) {
+          block.classList.replace("border-blue-800/30", "border-green-800/80");
+          if (tag) {
+            tag.textContent = "✓ Correct";
             tag.classList.add("text-green-400");
           }
-          // Wrong selected
-          else if (opt === selected) {
-            block.classList.replace("border-blue-800/30", "border-red-800/80");
-            tag.textContent = "✖ Wrong";
+        } else if (optionLetter === selected) {
+          block.classList.replace("border-blue-800/30", "border-red-800/80");
+          if (tag) {
+            tag.textContent = "✗ Wrong";
             tag.classList.add("text-red-400");
           }
-
-          if (selected === correct) {
-            const jsConfetti = new JSConfetti();
-
-            jsConfetti.addConfetti();
-          }
         }
       }
 
-      // Load stored chats only after page + script finished initializing DOM variables
-      window.addEventListener("load", () => {
-        loadFromStorage();
-        renderChatButtons();
-        if (currentChatIndex >= 0) loadChat();
-      });
+      // Show explanation
+      const explanation = document.querySelector(`.explanation-${questionNum}`);
+      if (explanation) explanation.classList.remove("hidden");
 
-      // Single authoritative loadChat implementation
-      function loadChat() {
-        chatMessages.innerHTML = "";
-
-        const messages = chats[currentChatIndex] || [];
-
-        if (messages.length === 0) {
-          welcomeScreen.classList.remove("hidden");
-          chatMessages.classList.add("hidden");
-        } else {
-          welcomeScreen.classList.add("hidden");
-          chatMessages.classList.remove("hidden");
-          messages.forEach((msg) => addMessage(msg.text, msg.isUser));
-        }
+      // Confetti for correct answer
+      if (selected === correct) {
+        const jsConfetti = new JSConfetti();
+        jsConfetti.addConfetti();
       }
-    </script>
+    }
+
+    // Make it global so onclick works
+    window.checkAnswer = checkAnswer;
+    window.generateMCQs = generateMCQs;
+    window.switchTab = switchTab;
+
+    // ==================== INITIALIZATION ====================
+    window.addEventListener("load", () => {
+      loadFromStorage();
+      renderChatButtons();
+      if (currentChatIndex >= 0) {
+        loadChat();
+      }
+    });
+  </script>
   </body>
 </html>

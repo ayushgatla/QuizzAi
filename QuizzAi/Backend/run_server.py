@@ -1,5 +1,3 @@
-
-
 import uvicorn
 from config import Config
 
