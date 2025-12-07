@@ -14,18 +14,10 @@ class AgentManager:
             return self.agents[session_id]
         
         self.context_storage[session_id] = {}
-        gemini_key = os.getenv("API_KEY")
-        if not gemini_key:
-            raise ValueError(
-                "❌ No Gemini API key found!\n"
-                "Set GEMINI_API_KEY in your .env file\n"
-                "Get one at: https://aistudio.google.com/app/apikey"
-            )
-        
         llm = LLM(
-            model="gemini-pro", 
-            api_key=gemini_key,
-            temperature=0.7  
+            model="deepseek/deepseek-chat",  
+            api_key=os.getenv("API_KEY"),
+            base_url="https://api.deepseek.com"  # ← Use base_url, not api_base
         )
         agent = Agent(
             role="Educational AI Assistant",

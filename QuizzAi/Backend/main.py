@@ -131,7 +131,7 @@ def generate(chat_id:str ,typeof:str,count:int ):
     else :
         raise HTTPException(status_code=400, detail="Invalid question type. Use: mcq, short, or long")
     
-    result = agent_maneger.run_agent(prompt,crew_id)
+    result = agent_maneger.run_agent(prompt[:100],crew_id)
     try:
         questions = json.loads(result)  
     except Exception as ex:
