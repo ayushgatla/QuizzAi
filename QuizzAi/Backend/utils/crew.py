@@ -1,5 +1,6 @@
-from crewai import Agent
+from crewai import Agent, Crew, LLM
 from typing import Dict, Optional
+from crewai import Task
 import json
 import os
 class AgentManager:
@@ -13,7 +14,19 @@ class AgentManager:
             return self.agents[session_id]
         
         self.context_storage[session_id] = {}
+        gemini_key = os.getenv("API_KEY")
+        if not gemini_key:
+            raise ValueError(
+                "❌ No Gemini API key found!\n"
+                "Set GEMINI_API_KEY in your .env file\n"
+                "Get one at: https://aistudio.google.com/app/apikey"
+            )
         
+        llm = LLM(
+            model="gemini-pro", 
+            api_key=gemini_key,
+            temperature=0.7  
+        )
         agent = Agent(
             role="Educational AI Assistant",
             goal="""Generate high-quality educational questions (MCQs, short answer, long answer) 
@@ -32,7 +45,7 @@ class AgentManager:
                         Do not include any explanatory text, markdown formatting, or code blocks.
                         Just pure JSON that can be parsed directly.""",
             verbose=True,
-            llm="deepseek/deepseek-chat",  # Changed from 'model' to 'llm'
+            llm=llm,
             tools=[],
             allow_delegation=False,
         )
@@ -88,9 +101,22 @@ class AgentManager:
             print(f"Running agent for session: {session_id}")
             print(f"Prompt preview: {full_prompt[:100]}...")
             
-            response = agent.execute_task(full_prompt)
+            task = Task(
+                description=full_prompt,
+                agent=agent,
+                expected_output="JSON formatted response with the requested questions or answer"
+            )
             
+            crew = Crew(
+                agents=[agent],
+                tasks=[task],
+                verbose=True
+            )
+            result=crew.kickoff()
+            response = str(result)
             return response
+
+         
         
         except Exception as ex:
             print(f"Error running agent: {str(ex)}")
@@ -109,7 +135,7 @@ class AgentManager:
             }
         return {"error": f"No agent found for session: {session_id}"}
 
-    def clear_session(self, session_id: str) -> bool:
+    def clean_session(self, session_id: str) -> bool:
        
         found = False
         

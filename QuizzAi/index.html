@@ -937,7 +937,7 @@
       }
     });
 
-    // ==================== PDF UPLOAD ====================
+   
     async function handlePDF(file) {
       if (!file) return;
 
@@ -950,17 +950,16 @@
         return;
       }
 
-      // Display PDF
       const url = URL.createObjectURL(file);
       pdfViewer.src = url;
       pdfViewer.classList.remove("hidden");
       pdfPlaceholder.classList.add("hidden");
       pdfViewer.onload = () => URL.revokeObjectURL(url);
 
-      // Upload to backend
+    
       await uploadPdfToBackend(file);
     }
-
+    
     async function uploadPdfToBackend(file) {
       if (!currentChatId) {
         addMessage("⚠️ Please create a new chat first!", false);
@@ -972,7 +971,7 @@
         formData.append("file", file);
 
         addMessage("📤 Uploading PDF and extracting text...", false);
-
+        
         const response = await fetch(`${API_BASE_URL}/api/pdf/upload/${currentChatId}`, {
           method: "POST",
           body: formData,
@@ -991,7 +990,7 @@
           saveToStorage();
           renderChatButtons();
         }
-
+        
         addMessage("✅ PDF uploaded successfully! You can now generate questions.", false);
         return data;
       } catch (error) {
@@ -1019,8 +1018,8 @@
       pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
       handlePDF(e.dataTransfer.files[0]);
     });
-
-
+    
+    
     async function generateMCQs(count) {
       if (!currentChatId) {
         alert("Please create a new chat first!");
@@ -1044,7 +1043,7 @@
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/generate/${currentChatId}?type=mcq&count=${count}`,
+          `${API_BASE_URL}/generate/${currentChatId}?typeof=${"mcq"}&count=${count}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" }

@@ -95,7 +95,7 @@ async def upload_pdf_to_session(chat_id:str, file:UploadFile=File(...)):
             "pdf_filename": file.filename,
             "processed": True
         })
-        agent_maneger.add_to_memory(session["crew_session_id"],pdf_text)
+        agent_maneger.add_to_context(session["crew_session_id"],pdf_text)
         return {
             "message": "PDF processed and memory updated",
             "filename": file.filename
@@ -106,7 +106,7 @@ async def upload_pdf_to_session(chat_id:str, file:UploadFile=File(...)):
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-@app.post("/generate/{chat_id}")
+@app.post("/generate/{chat_id}")         
 def generate(chat_id:str ,typeof:str,count:int ):
 
     session = session_manager.get_session(chat_id)

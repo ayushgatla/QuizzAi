@@ -1,6 +1,7 @@
 from uuid import uuid4
 from typing import Dict, List, Optional
 from datetime import datetime
+from utils.crew import agent_maneger
 
 class SessionManager:
     def __init__(self):
@@ -11,10 +12,11 @@ class SessionManager:
        
         chat_id = str(uuid4())
         crew_session_id = str(uuid4())
+        agents = agent_maneger.create_agent(chat_id)
         
         session_data = {
             "chat_id": chat_id,
-            "crew_session_id": crew_session_id,
+            "crew_session_id": chat_id,
             "pdf_text": None,
             "pdf_filename": None,
             "processed": False,
@@ -24,6 +26,7 @@ class SessionManager:
         }
         
         self.sessions[chat_id] = session_data
+    
         return chat_id, session_data
     
     def get_session(self, chat_id: str) -> Optional[dict]:
