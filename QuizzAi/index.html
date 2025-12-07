@@ -912,11 +912,14 @@
       sendButton.disabled = true;
 
       try {
-        const res = await fetch(`${API_BASE_URL}/chat/${currentChatId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, isUser: true })
-        });
+       const res = await fetch(`${API_BASE_URL}/chat/${currentChatId}`, {
+  method: "POST",
+  headers: { 
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ prompt: text })
+});
+
 
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 

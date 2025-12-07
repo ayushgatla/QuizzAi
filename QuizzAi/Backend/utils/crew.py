@@ -21,7 +21,7 @@ class AgentManager:
         )
         agent = Agent(
             role="Educational AI Assistant",
-            goal="""Generate high-quality educational questions (MCQs, short answer, long answer) 
+            goal="""Generate high-quality educational questions (MCQs, short answer, long answer,or just normal answer for a question asked) 
                    from PDF content and help students learn through intelligent conversation.""",
             backstory="""You are an expert educational assistant with deep knowledge across multiple subjects.
                         You excel at creating challenging yet fair questions that test understanding.

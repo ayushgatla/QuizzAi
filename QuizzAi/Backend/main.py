@@ -21,7 +21,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from pydantic import BaseModel
 
+class ChatRequest(BaseModel):
+    prompt: str
 
 @app.post("/session")
 def new_session():
@@ -126,8 +129,6 @@ def generate(chat_id:str ,typeof:str,count:int ):
         prompt = f"Generate {count} short questions from the stored pdf content and given them in a json file with question,answer,correct answer,explanation why it is correct"
     elif typeof=="long":
         prompt = f"Generate {count} long questions from the stored pdf content and given them in a json file with question,answer,ypecorrect answer,explanation why it is correct"
-    elif typeof=="chat":
-        prompt=f"reply according to asked quesion and return the answer in the form of a json file with the asked question and its respective answer"
     else :
         raise HTTPException(status_code=400, detail="Invalid question type. Use: mcq, short, or long")
     
@@ -147,6 +148,35 @@ def generate(chat_id:str ,typeof:str,count:int ):
         "count":count,
         "questions":questions,
     }
+
+
+@app.post("/chat/{chat_id}")         
+def chat(chat_id: str, data: ChatRequest):
+
+    session = session_manager.get_session(chat_id)
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    if not session["processed"]:
+        raise HTTPException(400, "No PDF uploaded for this session")
+
+    crew_id = session["crew_session_id"]
+    result = agent_maneger.run_agent(data.prompt[:100], crew_id)
+
+    try:
+        json_result = json.loads(result)
+    except:
+        raise HTTPException(500, "Invalid JSON from agent")
+
+    session_manager.add_message(chat_id, {
+        "type": "chat",
+        "prompt": data.prompt,
+        "response": json_result
+    })
+
+    return json_result
+
+    
 
 @app.get("/")
 def health_check():
