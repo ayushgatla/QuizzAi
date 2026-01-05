@@ -7,12 +7,12 @@ class Config:
     
 
     ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
-    API_KEY = os.getenv("API_KEY")
+    API_KEY = os.getenv("GEMINI_API_KEY") 
     APP_NAME = os.getenv("APP_NAME", "QuizzAI")
     
   
     HOST = "127.0.0.1"  
-    PORT = 8080 
+    PORT = 8080
     
   
     MAX_PDF_SIZE = int(os.getenv("MAX_PDF_SIZE", 10 * 1024 * 1024))  # 10MB default

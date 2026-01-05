@@ -1,27 +1,35 @@
-from crewai import Agent, Crew, LLM
+from crewai import Agent, Crew, Task
 from typing import Dict, Optional
-from crewai import Task
+from langchain_google_genai import ChatGoogleGenerativeAI
 import json
 import os
+
+
 class AgentManager:
     def __init__(self):
         self.agents: Dict[str, Agent] = {}
         self.context_storage: Dict[str, Dict[str, str]] = {}  # Store context manually
     
     def create_agent(self, session_id: str) -> Agent:
+        """Create or retrieve an agent for a given session."""
         if session_id in self.agents:
             print(f"Using existing agent for session: {session_id}")
             return self.agents[session_id]
         
+        # Initialize context storage for new session
         self.context_storage[session_id] = {}
-        llm = LLM(
-            model="deepseek/deepseek-chat",  
-            api_key=os.getenv("API_KEY"),
-            base_url="https://api.deepseek.com"  # ← Use base_url, not api_base
+        
+        # Configure Gemini LLM
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash-exp",  # Or use "gemini-1.5-pro" for more power
+            google_api_key=os.getenv("GEMINI_API_KEY"),  # Make sure you set this!
+            temperature=0.7,  # Adjust for creativity vs consistency
+            convert_system_message_to_human=True  # Gemini needs this
         )
+        
         agent = Agent(
             role="Educational AI Assistant",
-            goal="""Generate high-quality educational questions (MCQs, short answer, long answer,or just normal answer for a question asked) 
+            goal="""Generate high-quality educational questions (MCQs, short answer, long answer, or just normal answer for a question asked) 
                    from PDF content and help students learn through intelligent conversation.""",
             backstory="""You are an expert educational assistant with deep knowledge across multiple subjects.
                         You excel at creating challenging yet fair questions that test understanding.
@@ -47,7 +55,7 @@ class AgentManager:
         return agent
 
     def add_to_context(self, session_id: str, content: str, content_type: str = "pdf_content"):
-       
+        """Add content to the session context."""
         if session_id not in self.context_storage:
             self.context_storage[session_id] = {}
         
@@ -58,6 +66,7 @@ class AgentManager:
         print(f"Total context items: {len(self.context_storage[session_id])}")
 
     def get_context(self, session_id: str) -> str:
+        """Retrieve all context for a session."""
         if session_id not in self.context_storage:
             return ""
         
@@ -68,7 +77,7 @@ class AgentManager:
         return "\n".join(context_parts)
 
     def run_agent(self, prompt: str, session_id: str, include_context: bool = True) -> str:
-    
+        """Execute agent with given prompt and context."""
         if session_id not in self.agents:
             raise ValueError(
                 f"No agent found for session: {session_id}\n"
@@ -87,28 +96,31 @@ class AgentManager:
                     full_prompt = f"""Context Information:
 {context}
 
-
+User Request:
 {prompt}"""
             
             print(f"Running agent for session: {session_id}")
-            print(f"Prompt preview: {full_prompt[:100]}...")
+            print(f"Prompt preview: {full_prompt[:200]}...")
             
+            # Create task
             task = Task(
                 description=full_prompt,
                 agent=agent,
                 expected_output="JSON formatted response with the requested questions or answer"
             )
             
+            # Execute crew
             crew = Crew(
                 agents=[agent],
                 tasks=[task],
                 verbose=True
             )
-            result=crew.kickoff()
+            
+            result = crew.kickoff()
             response = str(result)
+            
+            print(f"Agent response length: {len(response)} characters")
             return response
-
-         
         
         except Exception as ex:
             print(f"Error running agent: {str(ex)}")
@@ -128,7 +140,7 @@ class AgentManager:
         return {"error": f"No agent found for session: {session_id}"}
 
     def clean_session(self, session_id: str) -> bool:
-       
+        """Clean up agent and context for a session."""
         found = False
         
         if session_id in self.agents:
@@ -147,11 +159,11 @@ class AgentManager:
         return found
 
     def get_active_sessions(self) -> list:
-       
+        """Get list of all active session IDs."""
         return list(self.agents.keys())
 
     def get_stats(self) -> dict:
-     
+        """Get statistics about all sessions."""
         return {
             "total_agents": len(self.agents),
             "total_contexts": len(self.context_storage),
@@ -159,6 +171,5 @@ class AgentManager:
         }
 
 
+
 agent_maneger = AgentManager()
-
-

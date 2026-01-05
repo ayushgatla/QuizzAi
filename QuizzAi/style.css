@@ -109,3 +109,16 @@ body {
   width: 120px;
   background-color: rgb(38, 211, 202);
 }
+
+.scroll {
+  width: 100%;
+  max-height: 760px; 
+  overflow-y: auto;
+  padding-right: 0.75rem; 
+  -webkit-overflow-scrolling: touch;
+  word-break: break-word;
+
+  
+  scrollbar-color: #7c3aed rgba(11,18,32,0.6);
+  scrollbar-width: thin;
+}

@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = "sk-df27a61ec9f94071b7c73995476ff5a4" # <= put your key here
+API_KEY = "AIzaSyBZDSI3cOKh9uKRI0l5Ar9DYfj5AsioZ2g" # <= put your key here
 
 if API_KEY.strip() == "" or "YOUR_" in API_KEY:
     raise ValueError("Bro put your actual DeepSeek API key in the variable.")
@@ -10,7 +10,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-url = "https://api.deepseek.com/v1/balance"
+url = "https://generativelanguage.googleapis.com"
 
 try:
     resp = requests.get(url, headers=headers)

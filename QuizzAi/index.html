@@ -1,285 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="icon"
-      href="icons/download-removebg-preview.png"
-      type="image/x-icon"
-    />
-    <!-- Or use PNG: -->
-    <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>QuizzAi - Learn by Practice</title>
-  </head>
-  <body class="bg-gray-950 text-white antialiased">
-    <!-- Backdrop -->
-    <style>
-      .ani {
-        translate: 100%;
-        opacity: 0;
-        transition: 800ms ease;
-      }
-      .ani.show {
-        translate: 0%;
-        opacity: 1;
-      }
-    </style>
-    <div
-      id="backdrop"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-40"
-    ></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="icons/download-removebg-preview.png" type="image/x-icon" />
+  <!-- Or use PNG: -->
+  <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
 
-    <!-- Mobile Menu Button -->
-    <button
-      id="dashToggle"
-      class="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
-    >
-      <svg
-        class="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      </svg>
-    </button>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="style.css" rel="stylesheet">
+  <title>QuizzAi - Learn by Practice</title>
+</head>
 
-    <!-- Sidebar -->
-    <button
-      id="dashn"
-      class="fixed top-4 left-4 z-50 flex items-center justify-center w-7 h-7 rounded-xl bg-gray-800/90 border border-gray-700 hover:bg-gray-700 transition-colors"
-    >
-      <img src="icons/menu.png" alt="Menu" class="w-5 h-5" />
-      <span class="sr-only">Open dashboard</span>
-    </button>
-    <aside
-      id="dash"
-      class="fixed left-0 top-0 h-screen w-64 bg-gray-900 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-50 flex flex-col"
-    >
-      <div class="p-4 border-b border-gray-800">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <button
-              id="dashnew"
-              class="fixed top-4 left-4 z-50 flex items-center justify-center w-7 h-7 rounded-xl bg-gray-800/90 border border-gray-700 hover:bg-gray-700 transition-colors"
-            >
-              <img src="icons/menu.png" alt="Menu" class="w-5 h-5" />
-              <span class="sr-only">Open dashboard</span>
-            </button>
-            <h1 class="text-lg font-bold ml-10">QuizzAi</h1>
-          </div>
-          <!-- Button that opens floating details -->
-          <button
-            id="detailsofuser"
-            class="flex items-center justify-center w-7 h-7 rounded-xl bg-gray-800/90 border border-gray-700 hover:bg-gray-700 transition-colors"
-          >
-            <img id="userp" alt="Menu" class="w-5 h-5" />
+<body class="bg-gray-950 text-white antialiased">
+  <!-- Backdrop -->
+  <style>
+    .ani {
+      translate: 100%;
+      opacity: 0;
+      transition: 800ms ease;
+    }
+
+    .ani.show {
+      translate: 0%;
+      opacity: 1;
+    }
+  </style>
+  <div id="backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-40"></div>
+
+  <!-- Mobile Menu Button -->
+  <button id="dashToggle"
+    class="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+
+  <!-- Sidebar -->
+  <button id="dashn"
+    class="fixed top-4 left-4 z-50 flex items-center justify-center w-7 h-7 rounded-xl bg-gray-800/90 border border-gray-700 hover:bg-gray-700 transition-colors">
+    <img src="icons/menu.png" alt="Menu" class="w-5 h-5" />
+    <span class="sr-only">Open dashboard</span>
+  </button>
+  <aside id="dash"
+    class="fixed left-0 top-0 h-screen w-64 bg-gray-900 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-50 flex flex-col">
+    <div class="p-4 border-b border-gray-800">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button id="dashnew"
+            class="fixed top-4 left-4 z-50 flex items-center justify-center w-7 h-7 rounded-xl bg-gray-800/90 border border-gray-700 hover:bg-gray-700 transition-colors">
+            <img src="icons/menu.png" alt="Menu" class="w-5 h-5" />
             <span class="sr-only">Open dashboard</span>
           </button>
-
-          <!-- Floating div -->
-          <div
-            id="userDetailsBox"
-            class="hidden fixed bottom-16 right-5 bg-gray-900 text-white p-4 rounded-xl shadow-xl border border-gray-700 w-56"
-          >
-            <img
-              id="userimg"
-              class="w-12 h-12 rounded-full mb-2 overflow-hidden"
-            />
-            <p id="username" class="font-semibold"></p>
-            <p id="useremail" class="text-sm opacity-80"></p>
-          </div>
-
-          <script>
-            const name = localStorage.getItem("userName");
-            const email = localStorage.getItem("userEmail");
-            const photo = localStorage.getItem("userPhoto");
-
-            // Set values in the floating div
-            document.getElementById("username").textContent =
-              name || "Unknown Sigma";
-            document.getElementById("useremail").textContent =
-              email || "No email??";
-            document.getElementById("userimg").src = photo || "";
-
-            // Set button photo
-            document.getElementById("userp").src = photo || "";
-
-            // Floating div toggle
-            const btn = document.getElementById("detailsofuser");
-            const box = document.getElementById("userDetailsBox");
-
-            btn.addEventListener("click", () => {
-              box.classList.toggle("hidden");
-            });
-          </script>
-          <button
-            id="dashClose"
-            class="lg:hidden p-1 hover:bg-gray-800 rounded"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <h1 class="text-lg font-bold ml-10">QuizzAi</h1>
         </div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto p-4">
-        <button
-          id="newchat"
-          class="w-full flex items-center gap-3 px-4 py-3 bg-purple-500 hover:bg-blue-700 rounded-lg transition-colors mb-4"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          <span class="font-medium">New Chat</span>
+        <!-- Button that opens floating details -->
+        <button id="detailsofuser"
+          class="flex items-center justify-center w-7 h-7 rounded-xl bg-gray-800/90 border border-gray-700 hover:bg-gray-700 transition-colors">
+          <img id="userp" alt="Menu" class="w-5 h-5" />
+          <span class="sr-only">Open dashboard</span>
         </button>
 
-        <div class="space-y-2">
-          <h3
-            class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2"
-          >
-            Recent Chats
-          </h3>
-          <div id="chatsarea" class="space-y-1">
-            <!-- Chats appear here -->
+        <!-- Floating div -->
+        <div id="userDetailsBox"
+          class="hidden fixed bottom-16 right-5 bg-gray-900 text-white p-4 rounded-xl shadow-xl border border-gray-700 w-56">
+          <img id="userimg" class="w-12 h-12 rounded-full mb-2 overflow-hidden" />
+          <p id="username" class="font-semibold"></p>
+          <p id="useremail" class="text-sm opacity-80"></p>
+        </div>
+
+        <script>
+          const name = localStorage.getItem("userName");
+          const email = localStorage.getItem("userEmail");
+          const photo = localStorage.getItem("userPhoto");
+
+          // Set values in the floating div
+          document.getElementById("username").textContent =
+            name || "Unknown Sigma";
+          document.getElementById("useremail").textContent =
+            email || "No email??";
+          document.getElementById("userimg").src = photo || "";
+
+          // Set button photo
+          document.getElementById("userp").src = photo || "";
+
+          // Floating div toggle
+          const btn = document.getElementById("detailsofuser");
+          const box = document.getElementById("userDetailsBox");
+
+          btn.addEventListener("click", () => {
+            box.classList.toggle("hidden");
+          });
+        </script>
+        <button id="dashClose" class="lg:hidden p-1 hover:bg-gray-800 rounded">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4">
+      <button id="newchat"
+        class="w-full flex items-center gap-3 px-4 py-3 bg-purple-500 hover:bg-blue-700 rounded-lg transition-colors mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span class="font-medium">New Chat</span>
+      </button>
+
+      <div class="space-y-2">
+        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2">
+          Recent Chats
+        </h3>
+        <div id="chatsarea" class="space-y-1">
+          <!-- Chats appear here -->
+        </div>
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-gray-800 text-xs text-gray-500 text-center">
+      &copy; 2025 Ayush Gatla
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main id="mainContent" class="lg:ml-64 min-h-screen flex">
+    <!-- PDF Viewer Section -->
+    <section id="pdfSection" class="w-full lg:w-1/2 p-4 border-r border-gray-800">
+      <div id="pdfZone"
+        class="h-full rounded-xl border-2 border-dashed border-gray-700 hover:border-blue-500 transition-colors cursor-pointer bg-gray-900/50 relative overflow-hidden group">
+        <div id="pdfPlaceholder"
+          class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-blue-400 transition-colors">
+          <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p class="text-lg font-medium">Drop PDF here or click to upload</p>
+          <p class="text-sm text-gray-500 mt-1">
+            Supports PDF files up to 10MB
+          </p>
+        </div>
+        <iframe id="pdfViewer" class="hidden w-full h-full rounded-xl"></iframe>
+        <input type="file" id="pdfInput" accept="application/pdf" class="hidden" />
+      </div>
+    </section>
+
+    <!-- Chat Section -->
+    <section class="w-full lg:w-1/2 flex flex-col">
+      <!-- Tabs -->
+      <div class="flex items-center gap-2 px-4 pt-4 border-b border-gray-800">
+        <button onclick="switchTab('chat')" class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all active"
+          data-tab="chat">
+          Chat
+        </button>
+        <button onclick="switchTab('mcq')" class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all"
+          data-tab="mcq">
+          MCQs
+        </button>
+        <button onclick="switchTab('short')" class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all"
+          data-tab="short">
+          Short
+        </button>
+        <button onclick="switchTab('long')" class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all"
+          data-tab="long">
+          Long
+        </button>
+      </div>
+
+      <!-- Messages Area -->
+      <div id="messagesContainer" class="flex-1 overflow-y-auto p-4  max-h-[770px] space-y-4 scroll">
+        <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center">
+          <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+            <img src="icons/download-removebg-preview.png" alt="" />
           </div>
+          <h2 class="text-3xl font-bold mb-2 bg-blue-400 bg-clip-text text-transparent">
+            Welcome to QuizzAi
+          </h2>
+          <p class="text-gray-400 max-w-md">
+            Upload a PDF and start generating questions, or chat about any
+            topic you'd like to learn!
+          </p>
+        </div>
+
+        <div id="chatMessages" class="hidden space-y-4">
+          <!-- Messages appear here -->
         </div>
       </div>
 
-      <div
-        class="p-4 border-t border-gray-800 text-xs text-gray-500 text-center"
-      >
-        &copy; 2025 Ayush Gatla
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main id="mainContent" class="lg:ml-64 min-h-screen flex">
-      <!-- PDF Viewer Section -->
-      <section
-        id="pdfSection"
-        class="w-full lg:w-1/2 p-4 border-r border-gray-800"
-      >
+      <!-- Input Area -->
+      <div id="chatsinput" class="p-4 border-t border-gray-800">
         <div
-          id="pdfZone"
-          class="h-full rounded-xl border-2 border-dashed border-gray-700 hover:border-blue-500 transition-colors cursor-pointer bg-gray-900/50 relative overflow-hidden group"
-        >
-          <div
-            id="pdfPlaceholder"
-            class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-blue-400 transition-colors"
-          >
-            <svg
-              class="w-16 h-16 mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+          class="flex items-end gap-2 p-3 rounded-xl  bg-gray-900 border border-gray-800 focus-within:border-blue-500 transition-colors">
+          <!-- Tools -->
+          <div class="flex flex-col gap-2">
+            <label class="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              <input type="file" accept="application/pdf" class="hidden" id="pdfUpload" />
+            </label>
+          </div>
+
+          <!-- Textarea -->
+          <textarea id="messageInput" rows="1" placeholder="Ask anything..."
+            class="flex-1 bg-transparent resize-none focus:outline-none max-h-32 min-h-[40px]"></textarea>
+
+          <!-- Send Button -->
+          <button id="sendButton" disabled
+            class="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
+                d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
             </svg>
-            <p class="text-lg font-medium">Drop PDF here or click to upload</p>
-            <p class="text-sm text-gray-500 mt-1">
-              Supports PDF files up to 10MB
-            </p>
-          </div>
-          <iframe
-            id="pdfViewer"
-            class="hidden w-full h-full rounded-xl"
-          ></iframe>
-          <input
-            type="file"
-            id="pdfInput"
-            accept="application/pdf"
-            class="hidden"
-          />
-        </div>
-      </section>
-
-      <!-- Chat Section -->
-      <section class="w-full lg:w-1/2 flex flex-col">
-        <!-- Tabs -->
-        <div class="flex items-center gap-2 px-4 pt-4 border-b border-gray-800">
-          <button
-            onclick="switchTab('chat')"
-            class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all active"
-            data-tab="chat"
-          >
-            Chat
-          </button>
-          <button
-            onclick="switchTab('mcq')"
-            class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all"
-            data-tab="mcq"
-          >
-            MCQs
-          </button>
-          <button
-            onclick="switchTab('short')"
-            class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all"
-            data-tab="short"
-          >
-            Short
-          </button>
-          <button
-            onclick="switchTab('long')"
-            class="tab-btn px-6 py-3 rounded-t-lg font-medium transition-all"
-            data-tab="long"
-          >
-            Long
           </button>
         </div>
-
-        <!-- Messages Area -->
-        <div
-          id="messagesContainer"
-          class="flex-1 overflow-y-auto p-4 space-y-4"
-        >
-          <div
-            id="welcomeScreen"
-            class="h-full flex flex-col items-center justify-center text-center"
-          >
-            <div
-              class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-            >
-              <img src="icons/download-removebg-preview.png" alt="" />
+      </div>
+      <!--this is the section mcq-->
+      <div id="Mcqssection" class="flex flex-col h-[700px] p-4 space-y-4 hidden scroll">
+        <!-- Scrollable MCQ content -->
+        <div id="newest" class="flex-1 overflow-y-auto p-4 flex justify-center items-center space-y-4">
+          <div id="welcomemcq" class="flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center items-center mb-4">
+              <img src="icons/output-onlinepngtools.png" alt="" />
             </div>
-            <h2
-              class="text-3xl font-bold mb-2 bg-blue-400 bg-clip-text text-transparent"
-            >
-              Welcome to QuizzAi
+            <h2 class="text-3xl font-bold mb-2 bg-green-400 bg-clip-text text-transparent">
+              Generate MCQs
             </h2>
             <p class="text-gray-400 max-w-md">
               Upload a PDF and start generating questions, or chat about any
@@ -287,331 +235,148 @@
             </p>
           </div>
 
-          <div id="chatMessages" class="hidden space-y-4">
-            <!-- Messages appear here -->
-          </div>
+          <!-- MCQs will render here -->
+          <div id="chatmess" class="hidden max-h-[500px] overflow-y-auto space-y-4"></div>
         </div>
 
-        <!-- Input Area -->
-        <div id="chatsinput" class="p-4 border-t border-gray-800">
-          <div
-            class="flex items-end gap-2 p-3 rounded-xl bg-gray-900 border border-gray-800 focus-within:border-blue-500 transition-colors"
-          >
-            <!-- Tools -->
-            <div class="flex flex-col gap-2">
-              <label
-                class="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                  />
-                </svg>
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  class="hidden"
-                  id="pdfUpload"
-                />
-              </label>
-            </div>
-
-            <!-- Textarea -->
-            <textarea
-              id="messageInput"
-              rows="1"
-              placeholder="Ask anything..."
-              class="flex-1 bg-transparent resize-none focus:outline-none max-h-32 min-h-[40px]"
-            ></textarea>
-
-            <!-- Send Button -->
-            <button
-              id="sendButton"
-              disabled
-              class="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
-                />
-              </svg>
+        <div id="numberofmcqs"
+          class="mt-2 flex items-end gap-2 p-2 rounded-xl bg-grey-900 border border-gray-800 focus-within:border-blue-500 transition-colors">
+          <div id="5m"
+            class="h-full w-1/4 p-2 bg-green-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-emerald-200/50">
+            <button onclick="generateMCQs(5)" class="tab-btn rounded-t-lg m-2 font-bold transition-all active"
+              data-tab="chat">
+              Generate +5
+            </button>
+          </div>
+          <div id="10m"
+            class="h-full w-1/4 p-2 bg-green-500/20 flex rounded-xl border-4 border-dashed border-emerald-200/50 justify-center items-center font-mono">
+            <button onclick="generateMCQs(10)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +10
+            </button>
+          </div>
+          <div id="15m"
+            class="h-full w-1/4 p-2 flex bg-green-500/20 rounded-xl border-4 border-dashed border-emerald-200/50 justify-center items-center font-mono">
+            <button onclick="generateMCQs(15)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +15
+            </button>
+          </div>
+          <div id="20m"
+            class="h-full w-1/4 p-2 flex bg-green-500/20 rounded-xl border-4 border-dashed border-emerald-200/50 justify-center items-center font-mono flex">
+            <button onclick="generateMCQs(20)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +20
             </button>
           </div>
         </div>
-        <!--this is the section mcq-->
-        <div
-          id="Mcqssection"
-          class="flex flex-col h-[700px] p-4 space-y-4 hidden"
-        >
-          <!-- Scrollable MCQ content -->
-          <div
-            id="newest"
-            class="flex-1 overflow-y-auto p-4 flex justify-center items-center space-y-4"
-          >
-            <div
-              id="welcomemcq"
-              class="flex flex-col justify-center items-center text-center"
-            >
-              <div
-                class="w-16 h-16 rounded-2xl flex items-center justify-center items-center mb-4"
-              >
-                <img src="icons/output-onlinepngtools.png" alt="" />
-              </div>
-              <h2
-                class="text-3xl font-bold mb-2 bg-green-400 bg-clip-text text-transparent"
-              >
-                Generate MCQs
-              </h2>
-              <p class="text-gray-400 max-w-md">
-                Upload a PDF and start generating questions, or chat about any
-                topic you'd like to learn!
-              </p>
+      </div>
+      <div id="shortsection" class="flex-1 overflow-y-auto p-4 space-y-4 hidden scroll">
+        <div class="flex-1 bg-grey-800 rounded-xl h-[85%] overflow-y-auto p-4 space-y-4">
+          <div id="welcomeshort" class="h-full flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+              <img src="icons/output-onlinepngtools (1).png" alt="" />
             </div>
-
-            <!-- MCQs will render here -->
-            <div
-              id="chatmess"
-              class="hidden max-h-[500px] overflow-y-auto space-y-4"
-            ></div>
+            <h2 class="text-3xl font-bold mb-2 bg-purple-400 bg-clip-text text-transparent">
+              Generate Short Questions
+            </h2>
+            <p class="text-gray-400 max-w-md">
+              Upload a PDF and start generating questions, or chat about any
+              topic you'd like to learn!
+            </p>
           </div>
 
-          <div
-            id="numberofmcqs"
-            class="mt-2 flex items-end gap-2 p-2 rounded-xl bg-grey-900 border border-gray-800 focus-within:border-blue-500 transition-colors"
-          >
-            <div
-              id="5m"
-              class="h-full w-1/4 p-2 bg-green-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-emerald-200/50"
-            >
-              <button
-                onclick="generateMCQs(5)"
-                class="tab-btn rounded-t-lg m-2 font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +5
-              </button>
-            </div>
-            <div
-              id="10m"
-              class="h-full w-1/4 p-2 bg-green-500/20 flex rounded-xl border-4 border-dashed border-emerald-200/50 justify-center items-center font-mono"
-            >
-              <button
-                onclick="generateMCQs(10)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +10
-              </button>
-            </div>
-            <div
-              id="15m"
-              class="h-full w-1/4 p-2 flex bg-green-500/20 rounded-xl border-4 border-dashed border-emerald-200/50 justify-center items-center font-mono"
-            >
-              <button
-                onclick="generateMCQs(15)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +15
-              </button>
-            </div>
-            <div
-              id="20m"
-              class="h-full w-1/4 p-2 flex bg-green-500/20 rounded-xl border-4 border-dashed border-emerald-200/50 justify-center items-center font-mono flex"
-            >
-              <button
-                onclick="generateMCQs(20)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +20
-              </button>
-            </div>
+          <div id="chatmessshort" class="hidden space-y-4">
+            <!-- Messages appear here -->
           </div>
         </div>
-        <div
-          id="shortsection"
-          class="flex-1 overflow-y-auto p-4 space-y-4 hidden"
-        >
-          <div
-            class="flex-1 bg-grey-800 rounded-xl h-[85%] overflow-y-auto p-4 space-y-4"
-          >
-            <div
-              id="welcomeshort"
-              class="h-full flex flex-col items-center justify-center text-center"
-            >
-              <div
-                class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              >
-                <img src="icons/output-onlinepngtools (1).png" alt="" />
-              </div>
-              <h2
-                class="text-3xl font-bold mb-2 bg-purple-400 bg-clip-text text-transparent"
-              >
-                Generate Short Questions
-              </h2>
-              <p class="text-gray-400 max-w-md">
-                Upload a PDF and start generating questions, or chat about any
-                topic you'd like to learn!
-              </p>
-            </div>
-
-            <div id="chatmessshort" class="hidden space-y-4">
-              <!-- Messages appear here -->
-            </div>
+        <div id="numberofshort"
+          class="flex  items-end gap-2 h-[10%] p-3 rounded-xl bg-grey-900 border border-gray-800 focus-within:border-blue-500 transition-colors">
+          <div id="5s"
+            class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50">
+            <button onclick="generateMCQs(5)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +5
+            </button>
           </div>
-          <div
-            id="numberofshort"
-            class="flex items-end gap-2 h-[10%] p-3 rounded-xl bg-grey-900 border border-gray-800 focus-within:border-blue-500 transition-colors"
-          >
-            <div
-              id="5s"
-              class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50"
-            >
-              <button
-                onclick="generateMCQs(5)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +5
-              </button>
-            </div>
-            <div
-              id="10s"
-              class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50"
-            >
-              <button
-                onclick="generateMCQs(10)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +10
-              </button>
-            </div>
-            <div
-              id="15s"
-              class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50"
-            >
-              <button
-                onclick="generateMCQs(15)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +15
-              </button>
-            </div>
-            <div
-              id="20s"
-              class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50"
-            >
-              <button
-                onclick="generateMCQs(20)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +20
-              </button>
-            </div>
+          <div id="10s"
+            class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50">
+            <button onclick="generateMCQs(10)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +10
+            </button>
+          </div>
+          <div id="15s"
+            class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50">
+            <button onclick="generateMCQs(15)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +15
+            </button>
+          </div>
+          <div id="20s"
+            class="h-full w-1/4 p-2 bg-purple-500/20 rounded-xl justify-center items-center font-mono flex border-4 border-dashed border-purple-500/50">
+            <button onclick="generateMCQs(20)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +20
+            </button>
           </div>
         </div>
-        <div
-          id="longsection"
-          class="flex-1 overflow-y-auto p-4 space-y-4 hidden"
-        >
-          <div
-            class="flex-1 bg-grey-800 rounded-xl h-[85%] overflow-y-auto p-4 space-y-4"
-          >
-            <div
-              id="welcomelong"
-              class="h-full flex flex-col items-center justify-center text-center"
-            >
-              <div
-                class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              >
-                <img src="icons/output-onlinepngtools (3).png" alt="" />
-              </div>
-              <h2
-                class="text-3xl font-bold mb-2 bg-rose-400 bg-clip-text text-transparent"
-              >
-                Generate Long Questions
-              </h2>
-              <p class="text-gray-400 max-w-md">
-                Upload a PDF and start generating questions, or chat about any
-                topic you'd like to learn!
-              </p>
+      </div>
+      <div id="longsection" class="flex-1 overflow-y-auto scroll p-4 space-y-4 hidden">
+        <div class="flex-1 bg-grey-800 rounded-xl h-[85%] overflow-y-auto p-4 space-y-4">
+          <div id="welcomelong" class="h-full flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+              <img src="icons/output-onlinepngtools (3).png" alt="" />
             </div>
-
-            <div id="chatmesslong" class="hidden space-y-4">
-              <!-- Messages appear here -->
-            </div>
+            <h2 class="text-3xl font-bold mb-2 bg-rose-400 bg-clip-text text-transparent">
+              Generate Long Questions
+            </h2>
+            <p class="text-gray-400 max-w-md">
+              Upload a PDF and start generating questions, or chat about any
+              topic you'd like to learn!
+            </p>
           </div>
-          <div
-            id="numberoflong"
-            class="flex items-end gap-2 h-[10%] p-3 rounded-xl bg-grey-900 border border-gray-800 focus-within:border-blue-500 transition-colors"
-          >
-            <div
-              id="5l"
-              class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono"
-            >
-              <button
-                onclick="generateMCQs(5)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +5
-              </button>
-            </div>
-            <div
-              id="10l"
-              class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono"
-            >
-              <button
-                o
-                onclick="generateMCQs(10)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +10
-              </button>
-            </div>
-            <div
-              id="15l"
-              class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono"
-            >
-              <button
-                onclick="generateMCQs(15)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +15
-              </button>
-            </div>
-            <div
-              id="20l"
-              class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono"
-            >
-              <button
-                onclick="generateMCQs(20)"
-                class="tab-btn rounded-t-lg font-bold transition-all active"
-                data-tab="chat"
-              >
-                Generate +20
-              </button>
-            </div>
+
+          <div id="chatmesslong" class="hidden space-y-4">
+            <!-- Messages appear here -->
           </div>
         </div>
-      </section>
-    </main>
+        <div id="numberoflong"
+          class="flex items-end gap-2 h-[10%] p-3 rounded-xl bg-grey-900 border border-gray-800 focus-within:border-blue-500 transition-colors">
+          <div id="5l"
+            class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono">
+            <button onclick="generateMCQs(5)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +5
+            </button>
+          </div>
+          <div id="10l"
+            class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono">
+            <button o onclick="generateMCQs(10)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +10
+            </button>
+          </div>
+          <div id="15l"
+            class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono">
+            <button onclick="generateMCQs(15)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +15
+            </button>
+          </div>
+          <div id="20l"
+            class="h-full w-1/4 p-2 bg-rose-600/40 flex rounded-xl border-4 border-dashed border-rose-600 justify-center items-center font-mono">
+            <button onclick="generateMCQs(20)" class="tab-btn rounded-t-lg font-bold transition-all active"
+              data-tab="chat">
+              Generate +20
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-    <script>
+  <script>
     // ==================== STATE MANAGEMENT ====================
     let chats = [];
     let currentChatIndex = -1;
@@ -640,7 +405,7 @@
     const pdfUpload = document.getElementById("pdfUpload");
     const mainContent = document.getElementById("mainContent");
 
-    
+
     const skill = document.getElementsByClassName("ani");
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -653,7 +418,6 @@
     }, {});
     Array.from(skill).forEach((el) => observer.observe(el));
 
-    // ==================== SIDEBAR CONTROLS ====================
     function openDash() {
       dash.classList.remove("-translate-x-full");
       dash.classList.add("lg:translate-x-0");
@@ -678,36 +442,36 @@
     dashClose?.addEventListener("click", closeDash);
     backdrop?.addEventListener("click", closeDash);
 
-    
+
     function saveToStorage() {
       localStorage.setItem("quizzChats", JSON.stringify(chats));
       localStorage.setItem("currentChatIndex", currentChatIndex);
     }
 
-   function loadFromStorage() {
-  const stored = localStorage.getItem("quizzChats");
-  const index = localStorage.getItem("currentChatIndex");
+    function loadFromStorage() {
+      const stored = localStorage.getItem("quizzChats");
+      const index = localStorage.getItem("currentChatIndex");
 
-  try {
-    const parsed = JSON.parse(stored);
+      try {
+        const parsed = JSON.parse(stored);
 
-   
-    if (Array.isArray(parsed)) {
-      chats = parsed;
-    } else {
-      console.warn("Invalid chat data, resetting storage.");
-      chats = [];
-      localStorage.removeItem("quizzChats");
+
+        if (Array.isArray(parsed)) {
+          chats = parsed;
+        } else {
+          console.warn("Invalid chat data, resetting storage.");
+          chats = [];
+          localStorage.removeItem("quizzChats");
+        }
+
+      } catch (e) {
+        console.error("Corrupted storage, clearing...", e);
+        chats = [];
+        localStorage.removeItem("quizzChats");
+      }
+
+      currentChatIndex = index !== null ? parseInt(index) : -1;
     }
-
-  } catch (e) {
-    console.error("Corrupted storage, clearing...", e);
-    chats = [];
-    localStorage.removeItem("quizzChats");
-  }
-
-  currentChatIndex = index !== null ? parseInt(index) : -1;
-}
 
 
     // ==================== SESSION MANAGEMENT ====================
@@ -717,9 +481,9 @@
         const res = await fetch(`${API_BASE_URL}/session`, {
           method: "POST"
         });
-        
+
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
+
         const data = await res.json();
         console.log("✅ Session created:", data);
 
@@ -736,7 +500,7 @@
         chats.push(newChat);
         currentChatIndex = chats.length - 1;
         currentChatId = data.chat_id; // SET THE CURRENT CHAT ID
-        
+
         saveToStorage();
         return newChat;
       } catch (error) {
@@ -752,7 +516,7 @@
       const newChat = await createNewChat();
       renderChatButtons();
       loadChat();
-      
+
       // Reset PDF viewer
       pdfViewer.classList.add("hidden");
       pdfPlaceholder.classList.remove("hidden");
@@ -778,8 +542,8 @@
         chatBtn.className = `flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer group
           ${i === currentChatIndex ? "bg-blue-600" : "hover:bg-gray-800"}`;
 
-        const label = chat.pdfFilename 
-          ? `${chat.pdfFilename.slice(0, 20)}...` 
+        const label = chat.pdfFilename
+          ? `${chat.pdfFilename.slice(0, 20)}...`
           : `Chat ${i + 1}`;
 
         chatBtn.innerHTML = `
@@ -821,7 +585,7 @@
 
     function loadChat() {
       chatMessages.innerHTML = "";
-      
+
       if (currentChatIndex < 0 || !chats[currentChatIndex]) {
         welcomeScreen.classList.remove("hidden");
         chatMessages.classList.add("hidden");
@@ -912,13 +676,13 @@
       sendButton.disabled = true;
 
       try {
-       const res = await fetch(`${API_BASE_URL}/chat/${currentChatId}`, {
-  method: "POST",
-  headers: { 
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({ prompt: text })
-});
+        const res = await fetch(`${API_BASE_URL}/chat/${currentChatId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt: text })
+        });
 
 
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -940,11 +704,11 @@
       }
     });
 
-   
+
     async function handlePDF(file) {
       if (!file) return;
 
-      const isPdf = 
+      const isPdf =
         (file.type && file.type === "application/pdf") ||
         (file.name && file.name.toLowerCase().endsWith(".pdf"));
 
@@ -959,13 +723,13 @@
       pdfPlaceholder.classList.add("hidden");
       pdfViewer.onload = () => URL.revokeObjectURL(url);
 
-    
+
       await uploadPdfToBackend(file);
     }
-    
+
     async function uploadPdfToBackend(file) {
       if (!currentChatId) {
-        addMessage("⚠️ Please create a new chat first!", false);
+        addMessage(" Please create a new chat first!", false);
         return;
       }
 
@@ -973,8 +737,8 @@
         const formData = new FormData();
         formData.append("file", file);
 
-        addMessage("📤 Uploading PDF and extracting text...", false);
-        
+        addMessage("Uploading PDF and extracting text...", false);
+
         const response = await fetch(`${API_BASE_URL}/api/pdf/upload/${currentChatId}`, {
           method: "POST",
           body: formData,
@@ -985,20 +749,20 @@
         }
 
         const data = await response.json();
-        
-       
+
+
         if (chats[currentChatIndex]) {
           chats[currentChatIndex].pdfUploaded = true;
           chats[currentChatIndex].pdfFilename = data.filename;
           saveToStorage();
           renderChatButtons();
         }
-        
-        addMessage("✅ PDF uploaded successfully! You can now generate questions.", false);
+
+        addMessage("PDF uploaded successfully! You can now generate questions.", false);
         return data;
       } catch (error) {
-        console.error("❌ Upload error:", error);
-        addMessage(`❌ Error uploading PDF: ${error.message}`, false);
+        console.error(" Upload error:", error);
+        addMessage(` Error uploading PDF: ${error.message}`, false);
         throw error;
       }
     }
@@ -1021,8 +785,8 @@
       pdfZone.classList.remove("border-blue-500", "bg-blue-500/10");
       handlePDF(e.dataTransfer.files[0]);
     });
-    
-    
+
+
     async function generateMCQs(count) {
       if (!currentChatId) {
         alert("Please create a new chat first!");
@@ -1059,11 +823,11 @@
 
         const data = await response.json();
         console.log("Generated MCQs:", data);
-        
+
         renderMCQs(data.questions);
       } catch (error) {
-        console.error("❌ MCQ generation error:", error);
-        chatmess.innerHTML = `<div class="text-center p-8 text-red-400">❌ Error: ${error.message}</div>`;
+        console.error(" MCQ generation error:", error);
+        chatmess.innerHTML = `<div class="text-center p-8 text-red-400"> Error: ${error.message}</div>`;
       }
     }
 
@@ -1072,7 +836,7 @@
       chatmess.innerHTML = "";
 
       if (!Array.isArray(mcqs) || mcqs.length === 0) {
-        chatmess.innerHTML = '<div class="text-center p-8 text-yellow-400">⚠️ No MCQs generated</div>';
+        chatmess.innerHTML = '<div class="text-center p-8 text-yellow-400"> No MCQs generated</div>';
         return;
       }
 
@@ -1105,7 +869,7 @@
             <p class="font-semibold mb-4">${questionNumber}. ${mcq.question || "Sample question"}</p>
             ${options}
             ${mcq.explanation ? `<div class="mt-4 p-3 bg-gray-700/50 rounded hidden explanation-${questionNumber}">
-              <p class="text-xs text-gray-300">💡 ${mcq.explanation}</p>
+              <p class="text-xs text-gray-300"> ${mcq.explanation}</p>
             </div>` : ''}
           </div>
         `;
@@ -1116,7 +880,7 @@
 
     function checkAnswer(questionNum, selected, correct) {
       const optionCount = 4;
-      
+
       for (let i = 0; i < optionCount; i++) {
         const optionLetter = String.fromCharCode(65 + i);
         const block = document.getElementById(`q${questionNum}-opt${i}`);
@@ -1175,5 +939,6 @@
       }
     });
   </script>
-  </body>
+</body>
+
 </html>
