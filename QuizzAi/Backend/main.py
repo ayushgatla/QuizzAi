@@ -8,11 +8,42 @@ from utils.pdf_parser import extract_text
 from utils.sessions import session_manager
 import os
 import json
+import re
 app = FastAPI(
     title=Config.APP_NAME,
     description="AI-powered question generation from PDFs",
     version="0.1.0"
 )
+
+
+def parse_agent_response(result: str):
+    """Attempt to parse the agent's output into JSON.
+    Tries multiple fallbacks:
+      - direct json.loads
+      - extract the first JSON object/array substring
+      - naive single-quote -> double-quote replacement as last resort
+    Raises on failure with a descriptive message.
+    """
+    if isinstance(result, (dict, list)):
+        return result
+    if not isinstance(result, str):
+        raise ValueError("Agent response is not a string")
+
+    try:
+        return json.loads(result)
+    except Exception:
+        # extract the first JSON object or array substring
+        m = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', result)
+        if m:
+            candidate = m.group(1)
+            try:
+                return json.loads(candidate)
+            except Exception:
+                # last resort: replace single quotes with double quotes
+                candidate2 = candidate.replace("'", '"')
+                return json.loads(candidate2)
+        # If we reach here, we couldn't find/parse JSON
+        raise ValueError("Could not parse agent response as JSON")
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,7 +164,20 @@ def generate(chat_id:str ,typeof:str,count:int ):
         raise HTTPException(status_code=400, detail="Invalid question type. Use: mcq, short, or long")
     
     result = agent_maneger.run_agent(prompt[:100],crew_id)
-    return result
+
+    try:
+        parsed = parse_agent_response(result)
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON from agent: {str(ex)} | raw: {str(result)[:300]}")
+
+    if isinstance(parsed, list):
+        return {"mcqs": parsed}
+    elif isinstance(parsed, dict):
+        if 'mcqs' in parsed and isinstance(parsed['mcqs'], list):
+            return parsed
+        return {"mcqs": [parsed]}
+    else:
+        raise HTTPException(status_code=500, detail="Unrecognized JSON structure from agent")
 
 
 @app.post("/chat/{chat_id}")         
@@ -150,17 +194,18 @@ def chat(chat_id: str, data: ChatRequest):
     result = agent_maneger.run_agent(data.prompt[:100], crew_id)
 
     try:
-        json_result = json.loads(result)
-    except:
-        raise HTTPException(500, "Invalid JSON from agent")
+        parsed = parse_agent_response(result)
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON from agent: {str(ex)} | raw: {str(result)[:300]}")
 
-    session_manager.add_message(chat_id, {
-        "type": "chat",
-        "prompt": data.prompt,
-        "response": json_result
-    })
-
-    return json_result
+    if isinstance(parsed, list):
+        return {"mcqs": parsed}
+    elif isinstance(parsed, dict):
+        if 'question' in parsed and isinstance(parsed['question'], list):
+            return parsed
+        return {"question": [parsed]}
+    else:
+        raise HTTPException(status_code=500, detail="Unrecognized JSON structure from agent")
 
     
 
