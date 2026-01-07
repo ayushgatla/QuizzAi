@@ -124,7 +124,6 @@
         loginpage.append(google);
         main.append(loginpage);
 
-        // 🔥 This is the magic line
         import("./auth.js").then((module) => {
           module.setupGoogleButton();
         });

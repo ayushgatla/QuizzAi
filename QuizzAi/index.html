@@ -605,7 +605,6 @@
       }
     }
 
-    // ==================== TAB SWITCHING ====================
     function switchTab(tabName) {
       document.querySelectorAll(".tab-btn").forEach((btn) => {
         btn.classList.remove("active", "bg-blue-600", "text-white");
@@ -639,7 +638,6 @@
       if (tabName === "chat") loadChat();
     }
 
-    // ==================== MESSAGE HANDLING ====================
     textarea.addEventListener("input", () => {
       textarea.style.height = "auto";
       textarea.style.height = Math.min(textarea.scrollHeight, 128) + "px";
@@ -824,30 +822,58 @@
         const data = await response.json();
         console.log("Generated MCQs:", data);
 
-        renderMCQs(data.questions);
+        renderMCQs(data);
       } catch (error) {
         console.error(" MCQ generation error:", error);
         chatmess.innerHTML = `<div class="text-center p-8 text-red-400"> Error: ${error.message}</div>`;
       }
     }
 
-    function renderMCQs(mcqs) {
+    function renderMCQs(data) {
+      console.log("=== RENDER MCQS DEBUG ===");
+      console.log("Full data object:", data);
+      console.log("data.mcqs exists?", !!data.mcqs);
+      console.log("data.mcqs is array?", Array.isArray(data.mcqs));
+      console.log("========================");
       const chatmess = document.getElementById("chatmess");
       chatmess.innerHTML = "";
 
-      if (!Array.isArray(mcqs) || mcqs.length === 0) {
-        chatmess.innerHTML = '<div class="text-center p-8 text-yellow-400"> No MCQs generated</div>';
+      // Normalize possible response shapes into an array of MCQs
+      let mcqsArray = [];
+      if (Array.isArray(data)) {
+        mcqsArray = data;
+      } else if (data && Array.isArray(data.mcqs)) {
+        mcqsArray = data.mcqs;
+      } else if (typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) mcqsArray = parsed;
+          else if (parsed && Array.isArray(parsed.mcqs)) mcqsArray = parsed.mcqs;
+        } catch (e) {
+          console.warn("Could not parse string response as JSON", e);
+        }
+      } else if (data && typeof data.mcqs === 'string') {
+        try {
+          const parsed = JSON.parse(data.mcqs);
+          if (Array.isArray(parsed)) mcqsArray = parsed;
+        } catch (e) {
+          console.warn("Could not parse data.mcqs as JSON", e);
+        }
+      }
+
+      if (!mcqsArray || mcqsArray.length === 0) {
+        chatmess.innerHTML = '<div class="text-center p-8 text-yellow-400">No MCQs found in response. Please ensure the AI returns valid JSON in the expected format.</div>';
         return;
       }
 
-      mcqs.forEach((mcq, i) => {
+      mcqsArray.forEach((mcq, i) => {
         const questionNumber = i + 1;
         const block = document.createElement("div");
         block.className = "m-4 p-4 rounded-lg bg-gray-800/60 text-sm text-gray-200 w-4/5";
 
-        const options = (mcq.options || ["Option A", "Option B", "Option C", "Option D"])
-          .map((opt, idx) => {
-            const optionLetter = String.fromCharCode(65 + idx); // A, B, C, D
+        const options = Object.entries(mcq.options || {})
+          .map(([key, val], idx) => {
+            const optionLetter = String.fromCharCode(65 + idx);
             return `
               <div class="option-wrapper relative mb-8">
                 <span class="result-tag absolute -bottom-6 left-2 text-sm font-semibold"></span>
@@ -856,7 +882,7 @@
                   <button id="q${questionNumber}-opt${idx}-btn"
                           onclick="checkAnswer(${questionNumber}, '${optionLetter}', '${mcq.correct}')"
                           class="text-blue-500 hover:text-blue-400 w-full text-left">
-                    ${optionLetter}. ${opt}
+                    ${optionLetter}. ${val}
                   </button>
                 </div>
               </div>
@@ -914,23 +940,17 @@
         }
       }
 
-      // Show explanation
-      const explanation = document.querySelector(`.explanation-${questionNum}`);
-      if (explanation) explanation.classList.remove("hidden");
 
-      // Confetti for correct answer
       if (selected === correct) {
         const jsConfetti = new JSConfetti();
         jsConfetti.addConfetti();
       }
     }
 
-    // Make it global so onclick works
     window.checkAnswer = checkAnswer;
     window.generateMCQs = generateMCQs;
     window.switchTab = switchTab;
 
-    // ==================== INITIALIZATION ====================
     window.addEventListener("load", () => {
       loadFromStorage();
       renderChatButtons();

@@ -133,21 +133,7 @@ def generate(chat_id:str ,typeof:str,count:int ):
         raise HTTPException(status_code=400, detail="Invalid question type. Use: mcq, short, or long")
     
     result = agent_maneger.run_agent(prompt[:100],crew_id)
-    try:
-        questions = json.loads(result)  
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=f"Error generating questions: {str(ex)}")
-    session_manager.add_message(chat_id,{
-            "type": "generation",
-            "question_type": typeof,
-            "count": count,
-            "result": questions
-    })
-    return{
-        "type":typeof,
-        "count":count,
-        "questions":questions,
-    }
+    return result
 
 
 @app.post("/chat/{chat_id}")         
