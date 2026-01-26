@@ -1,3 +1,4 @@
+out
 <!DOCTYPE html>
 <html lang="en">
 
@@ -412,6 +413,9 @@
       const newest = document.getElementById("newest");
       const chatmess = document.getElementById("chatmess");
       const welcomemcq = document.getElementById("welcomemcq");
+
+      const chatmessshort = document.getElementById("chatmessshort");
+      const welcomeshort = document.getElementById("welcomeshort");
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("show");
@@ -992,6 +996,190 @@
         loadChat();
       }
     });
+    async function generateShorts(count) {
+      if (!currentChatId) {
+        alert("Please create a new chat first!");
+        return;
+      }
+
+      if (!chats[currentChatIndex]?.pdfUploaded) {
+        alert("Please upload a PDF first!");
+        return;
+      }
+
+      welcomeshort?.classList.add("hidden");
+      chatmessshort.classList.remove("hidden");
+
+      const loader = document.createElement('div');
+      loader.id = 'short-loader';
+      loader.className = 'text-center p-8';
+      loader.textContent = '⏳ Generating Shorts...';
+      chatmessshort.appendChild(loader);
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/generate/${currentChatId}?typeof=${"short"}&count=${count}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Generated Shorts:", data);
+
+        // Append new MCQs to existing ones
+        renderShorts(data, true);
+
+        // remove loader if present
+        const loaderEl = document.getElementById('short-loader');
+        if (loaderEl) loaderEl.remove();
+      } catch (error) {
+        console.error(" MCQ generation error:", error);
+        // remove loader if present
+        const loaderEl = document.getElementById('short-loader');
+        if (loaderEl) loaderEl.remove();
+        chatmess.innerHTML = `<div class="text-center p-8 text-red-400"> Error: ${error.message}</div>`;
+      }
+    }
+
+    function renderShorts(data, append = true) {
+      console.log("=== RENDER SHORTS DEBUG ===");
+      console.log("Full data object:", data);
+      console.log("data.short_questions exists?", !!data.short_questions);
+      console.log("data.short_questions is array?", Array.isArray(data.short_questions));
+      console.log("append?", append);
+      console.log("========================");
+
+      if (!append) chatmessshort.innerHTML = "";
+
+      let shortsArray = [];
+      if (Array.isArray(data)) {
+        shortsArray = data;
+      } else if (data && Array.isArray(data.short_questions)) {
+        shortsArray = data.short_questions;
+      } else if (typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) shortsArray = parsed;
+          else if (parsed && Array.isArray(parsed.short_questions)) shortsArray = parsed.short_questions;
+        } catch (e) {
+          console.warn("Could not parse string response as JSON", e);
+        }
+      } else if (data && typeof data.short_questions === 'string') {
+        try {
+          const parsed = JSON.parse(data.short_questions);
+          if (Array.isArray(parsed)) shortsArray = parsed;
+        } catch (e) {
+          console.warn("Could not parse data.short_questions as JSON", e);
+        }
+      }
+
+      console.log("Final shortsArray:", shortsArray);
+
+      if (!shortsArray || shortsArray.length === 0) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'text-center p-8 text-yellow-400';
+        placeholder.textContent = 'No shorts found in response. Please ensure the AI returns valid JSON in the expected format.';
+        chatmessshort.appendChild(placeholder);
+        return;
+      }
+
+      const existingCount = chatmessshort.querySelectorAll('.questionblock').length;
+
+      shortsArray.forEach((shorts, i) => {
+        const questionNumber = existingCount + i + 1;
+        const block = document.createElement("div");
+        block.className = "m-4 p-4 rounded-lg bg-gray-800/60 text-sm text-gray-200 w-4/5";
+
+        block.innerHTML = `
+          <div class="questionblock">
+            <p class="font-semibold mb-4">${questionNumber}. ${shorts.question || "Sample question"}</p>
+            <div class="option-wrapper relative mb-8">
+              <span class="result-tag absolute -bottom-6 left-2 text-sm font-semibold"></span>
+              <div id="q${questionNumber}-short" 
+                   class="optionblock w-full border-4 border-blue-800/30 rounded-xl p-4 transition-all">
+                    <textarea id="q${questionNumber}-short-answer" class="w-full" rows="4" placeholder="Enter your answer..."></textarea>
+                    <button class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="processAnswer(${questionNumber},'${shorts.question}')">Submit</button>
+              </div>
+            </div>
+            ${shorts.correct ? `<div class="mt-4 p-3 bg-gray-700/50 rounded hidden explanation-${questionNumber}">
+              <p class="text-xs text-gray-300"><strong>Answer:</strong> ${shorts.correct}</p>
+            </div>` : ''}
+          </div>
+        `;
+
+        chatmessshort.appendChild(block);
+      });
+    }
+    async function processAnswer(questionNum, short) {
+      const answerTextarea = document.getElementById(`q${questionNum}-short-answer`);
+      const userAnswer = answerTextarea.value.trim();
+
+      if (!userAnswer) {
+        alert("Please enter an answer before submitting.");
+        return;
+      }
+
+      await checkAnswershort(questionNum, short, userAnswer);
+    }
+    async function checkAnswershort(questionNum, question, userAnswer) {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/shorts_check/chatid=${currentChatId}?question=${question}&answer=${userAnswer}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ question: question, answer: userAnswer }),
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        console.log("Short answer check response:", responseData);
+
+        // Handle the response from backend
+        if (responseData.remarks === "correct") {
+          const jsConfetti = new JSConfetti();
+          jsConfetti.addConfetti();
+          // Show correct indicator
+          const optionBlock = document.getElementById(`q${questionNum}-short`);
+          if (optionBlock) {
+            optionBlock.classList.add('border-green-500');
+            optionBlock.classList.remove('border-blue-800/30');
+          }
+        } else {
+          // Show incorrect indicator
+          const optionBlock = document.getElementById(`q${questionNum}-short`);
+          if (optionBlock) {
+            optionBlock.classList.add('border-red-500');
+            optionBlock.classList.remove('border-blue-800/30');
+          }
+        }
+
+        // Show explanation
+        const explanationDiv = document.querySelector(`.explanation-${questionNum}`);
+        if (explanationDiv) {
+          explanationDiv.classList.remove('hidden');
+        }
+
+      } catch (error) {
+        console.error("Short answer checking error:", error);
+      }
+      if (data.remarks == "correct") {
+
+        const jsConfetti = new JSConfetti();
+        jsConfetti.addConfetti();
+      }
+
+    }
 
   </script>
 </body>

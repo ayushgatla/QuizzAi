@@ -159,7 +159,8 @@ def generate(chat_id:str ,typeof:str,count:int ):
     elif typeof=="short":
         prompt = f"Generate {count} short questions from the stored pdf content and given them in a json file with question,answer,correct answer,explanation why it is correct"
     elif typeof=="long":
-        prompt = f"Generate {count} long questions from the stored pdf content and given them in a json file with question,answer,ypecorrect answer,explanation why it is correct"
+        prompt = f"Generate {count} long questions from the stored pdf content and given them in a json file with question,answer,correct answer,explanation why it is correct"
+    
     else :
         raise HTTPException(status_code=400, detail="Invalid question type. Use: mcq, short, or long")
     
@@ -171,11 +172,46 @@ def generate(chat_id:str ,typeof:str,count:int ):
         raise HTTPException(status_code=500, detail=f"Invalid JSON from agent: {str(ex)} | raw: {str(result)[:300]}")
 
     if isinstance(parsed, list):
-        return {"mcqs": parsed}
+        if typeof == "short":
+            return {"short_questions": parsed}
+        else:
+            return {"mcqs": parsed}
     elif isinstance(parsed, dict):
-        if 'mcqs' in parsed and isinstance(parsed['mcqs'], list):
+        if typeof == "short":
+            if 'short_questions' in parsed and isinstance(parsed['short_questions'], list):
+                return parsed
+            return {"short_questions": [parsed]}
+        else:
+            if 'mcqs' in parsed and isinstance(parsed['mcqs'], list):
+                return parsed
+            return {"mcqs": [parsed]}
+    else:
+        raise HTTPException(status_code=500, detail="Unrecognized JSON structure from agent")
+
+@app.post("/shorts_check/{chat_id}")
+def shorts_check(chat_id: str, question:str , answer:str):
+
+    session = session_manager.get_session(chat_id)
+    if not session:
+        raise HTTPException(404, "Session not found")
+
+    if not session["processed"]:
+        raise HTTPException(400, "No PDF uploaded for this session")
+
+    crew_id = session["crew_session_id"]
+    result = agent_maneger.run_agent(f"Check the given short answer question and answer from the stored pdf content and give the result in a json file with question,answer,is_correct (true/false),explanation why it is correct or not. Question: {question}, Answer: {answer}", crew_id)
+
+    try:
+        parsed = parse_agent_response(result)
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON from agent: {str(ex)} | raw: {str(result)[:300]}")
+
+    if isinstance(parsed, list):
+        return {"short_answer": parsed}
+    elif isinstance(parsed, dict):
+        if 'question' in parsed and isinstance(parsed['question'], list):
             return parsed
-        return {"mcqs": [parsed]}
+        return {"question": [parsed]}
     else:
         raise HTTPException(status_code=500, detail="Unrecognized JSON structure from agent")
 
@@ -199,7 +235,7 @@ def chat(chat_id: str, data: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Invalid JSON from agent: {str(ex)} | raw: {str(result)[:300]}")
 
     if isinstance(parsed, list):
-        return {"mcqs": parsed}
+        return {"short_questions": parsed}
     elif isinstance(parsed, dict):
         if 'question' in parsed and isinstance(parsed['question'], list):
             return parsed
@@ -207,27 +243,3 @@ def chat(chat_id: str, data: ChatRequest):
     else:
         raise HTTPException(status_code=500, detail="Unrecognized JSON structure from agent")
 
-    
-
-@app.get("/")
-def health_check():
-    return {
-        "status": "healthy",
-        "app": "QuizzAI API",
-        "version": "1.0.0"
-    }
-
-@app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "active_sessions": len(session_manager.sessions),
-            }
-        
-
-
-
-
-
-
-    

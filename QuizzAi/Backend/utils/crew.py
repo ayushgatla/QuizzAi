@@ -27,7 +27,7 @@ class AgentManager:
         agent = Agent(
             role="Educational AI Assistant",
             goal="""Generate high-quality educational questions (MCQs, short answer, long answer, or just normal answer for a question asked) 
-                   from PDF content and help students learn through intelligent conversation. also the format should be correct everytime like the outermost part must be labelled as "mcqs" then further inner "question" ,"options","correct" and the answer should be respective A,B,C,D represented in such manner""",
+                   from PDF content and help students learn through intelligent conversation. also the format should be correct everytime like the outermost part must be labelled as "mcqs" then further inner "question" ,"options","correct" and the answer should be respective A,B,C,D represented in such manner this for mcq but for shorts/long questions do accordling as asked from prompt""",
             backstory="""You are an expert educational assistant with deep knowledge across multiple subjects.
                         You excel at creating challenging yet fair questions that test understanding.
                         You have access to PDF content and can reference it to create questions.

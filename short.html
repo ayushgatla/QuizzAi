@@ -1,0 +1,132 @@
+async function generateShorts(count) {
+if (!currentChatId) {
+alert("Please create a new chat first!");
+return;
+}
+
+if (!chats[currentChatIndex]?.pdfUploaded) {
+alert("Please upload a PDF first!");
+return;
+}
+const chatmesshort = document.getElementById("chatmesshort");
+
+
+newest.classList.remove("flex", "justify-center", "items-center");
+welcomeshort?.classList.add("hidden");
+chatmesshort.classList.remove("hidden");
+
+const loader = document.createElement('div');
+loader.id = 'mcq-loader';
+loader.className = 'text-center p-8';
+loader.textContent = '⏳ Generating Shorts...';
+chatmesshort.appendChild(loader);
+
+try {
+const response = await fetch(
+`${API_BASE_URL}/generate/${currentChatId}?typeof=${"short"}&count=${count}`,
+{
+method: "POST",
+headers: { "Content-Type": "application/json" }
+}
+);
+
+if (!response.ok) {
+throw new Error(`HTTP error! status: ${response.status}`);
+}
+
+const data = await response.json();
+console.log("Generated MCQs:", data);
+
+renderShorts(data, true);
+
+const loaderEl = document.getElementById('mcq-loader');
+if (loaderEl) loaderEl.remove();
+} catch (error) {
+console.error(" Short generation error:", error);
+const loaderEl = document.getElementById('mcq-loader');
+if (loaderEl) loaderEl.remove();
+chatmess.innerHTML = `<div class="text-center p-8 text-red-400"> Error: ${error.message}</div>`;
+}
+}
+
+function renderShorts(data, append = true) {
+console.log("=== RENDER MCQS DEBUG ===");
+console.log("Full data object:", data);
+console.log("data.mcqs exists?", !!data.shorts);
+console.log("data.mcqs is array?", Array.isArray(data.shorts));
+console.log("append?", append);
+console.log("========================");
+const chatmesshort = document.getElementById("chatmesshort");
+
+if (!append) chatmesshort.innerHTML = "";
+
+let shortsArray = [];
+if (Array.isArray(data)) {
+shortsArray = data;
+} else if (data && Array.isArray(data.shorts)) {
+shortsArray = data.shorts;
+} else if (typeof data === 'string') {
+try {
+const parsed = JSON.parse(data);
+if (Array.isArray(parsed)) shortsArray = parsed;
+else if (parsed && Array.isArray(parsed.shorts)) shortsArray = parsed.shorts;
+} catch (e) {
+console.warn("Could not parse string response as JSON", e);
+}
+} else if (data && typeof data.shorts === 'string') {
+try {
+const parsed = JSON.parse(data.shorts);
+if (Array.isArray(parsed)) shortsArray = parsed;
+} catch (e) {
+console.warn("Could not parse data.mcqs as JSON", e);
+}
+}
+
+if (!shortsArray || shortsArray.length === 0) {
+const placeholder = document.createElement('div');
+placeholder.className = 'text-center p-8 text-yellow-400';
+placeholder.textContent = 'No MCQs found in response. Please ensure the AI returns valid JSON in the expected format.';
+chatmesshort.appendChild(placeholder);
+return;
+}
+
+const existingCount = chatmesshort.querySelectorAll('.questionblock').length;
+
+shortsArray.forEach((mcq, i) => {
+const questionNumber = existingCount + i + 1;
+const block = document.createElement("div");
+block.className = "m-4 p-4 rounded-lg bg-gray-800/60 text-sm text-gray-200 w-4/5";
+
+
+block.innerHTML = `
+<div class="questionblock">
+    <p class="font-semibold mb-4">${questionNumber}. ${shorts.question || "Sample question"}</p>
+    <div class="option-wrapper relative mb-8">
+        <span class="result-tag absolute -bottom-6 left-2 text-sm font-semibold"></span>
+        <div id="q${questionNumber}-opt${idx}"
+            class="optionblock border-4 border-blue-800/30 rounded-xl p-4 transition-all">
+            <div class="w-full"> <textarea class="w-full rezise-none" placeholder="type" rows=3></textarea> </div>
+            <button id="q${questionNumber}-opt${idx}-btn"
+                onclick="checkAnswer(${questionNumber}, '${optionLetter}', '${mcq.correct || ''}')"
+                class="text-blue-500 hover:text-blue-400 w-full text-left">
+                ${optionLetter}. ${val}
+            </button>
+        </div>
+    </div>
+    ${mcq.explanation ? `<div class="mt-4 p-3 bg-gray-700/50 rounded hidden explanation-${questionNumber}">
+        <p class="text-xs text-gray-300"> ${mcq.explanation}</p>
+    </div>` : ''}
+</div>
+`;
+
+chatmesshort.appendChild(block);
+});
+}
+
+function checkAnswershorts(questionNum, answer) {
+
+if (selected === correct) {
+const jsConfetti = new JSConfetti();
+jsConfetti.addConfetti();
+}
+}
