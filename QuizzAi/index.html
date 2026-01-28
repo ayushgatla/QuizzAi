@@ -1,4 +1,3 @@
-out
 <!DOCTYPE html>
 <html lang="en">
 
@@ -597,11 +596,33 @@ out
       if (currentChatIndex < 0 || !chats[currentChatIndex]) {
         welcomeScreen.classList.remove("hidden");
         chatMessages.classList.add("hidden");
+        // Hide PDF when no chat is selected
+        pdfViewer.classList.add("hidden");
+        pdfPlaceholder.classList.remove("hidden");
         return;
       }
 
       const messages = chats[currentChatIndex].messages || [];
       currentChatId = chats[currentChatIndex].chat_id;
+
+      // Show PDF if it was uploaded for this chat
+      if (chats[currentChatIndex].pdfUploaded && chats[currentChatIndex].pdfData) {
+        try {
+          const blob = new Blob([Uint8Array.from(atob(chats[currentChatIndex].pdfData), c => c.charCodeAt(0))], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          pdfViewer.src = url;
+          pdfViewer.classList.remove("hidden");
+          pdfPlaceholder.classList.add("hidden");
+          pdfViewer.onload = () => URL.revokeObjectURL(url);
+        } catch (e) {
+          console.warn("Could not restore PDF display:", e);
+          pdfViewer.classList.add("hidden");
+          pdfPlaceholder.classList.remove("hidden");
+        }
+      } else {
+        pdfViewer.classList.add("hidden");
+        pdfPlaceholder.classList.remove("hidden");
+      }
 
       if (messages.length === 0) {
         welcomeScreen.classList.remove("hidden");
@@ -740,8 +761,15 @@ out
       pdfPlaceholder.classList.add("hidden");
       pdfViewer.onload = () => URL.revokeObjectURL(url);
 
-
-      await uploadPdfToBackend(file);
+      // Store PDF as base64 for persistence
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        if (chats[currentChatIndex]) {
+          chats[currentChatIndex].pdfData = e.target.result.split(',')[1]; // Store only base64 part
+        }
+        await uploadPdfToBackend(file);
+      };
+      reader.readAsDataURL(file);
     }
 
     async function uploadPdfToBackend(file) {
@@ -1103,7 +1131,7 @@ out
               <span class="result-tag absolute -bottom-6 left-2 text-sm font-semibold"></span>
               <div id="q${questionNumber}-short" 
                    class="optionblock w-full border-4 border-blue-800/30 rounded-xl p-4 transition-all">
-                    <textarea id="q${questionNumber}-short-answer" class="w-full" rows="4" placeholder="Enter your answer..."></textarea>
+                    <textarea id="q${questionNumber}-short-answer" class="w-full bg-black" rows="4" placeholder="Enter your answer..."></textarea>
                     <button class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" onclick="processAnswer(${questionNumber},'${shorts.question}')">Submit</button>
               </div>
             </div>
@@ -1130,7 +1158,7 @@ out
     async function checkAnswershort(questionNum, question, userAnswer) {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/shorts_check/chatid=${currentChatId}?question=${question}&answer=${userAnswer}`,
+          `${API_BASE_URL}/shorts_check/${currentChatId}?question=${encodeURIComponent(question)}&answer=${encodeURIComponent(userAnswer)}`,
           {
             method: "POST",
             body: JSON.stringify({ question: question, answer: userAnswer }),
@@ -1142,44 +1170,71 @@ out
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const responseData = await response.json();
+        let responseData = await response.json();
         console.log("Short answer check response:", responseData);
 
-        // Handle the response from backend
-        if (responseData.remarks === "correct") {
+        if (responseData.question && Array.isArray(responseData.question)) {
+          responseData = responseData.question[0];
+        } else if (responseData.short_answer && Array.isArray(responseData.short_answer)) {
+          responseData = responseData.short_answer[0];
+        }
+
+        console.log("Processed response:", responseData);
+
+        const isCorrect = responseData.is_correct === true || responseData.is_correct === "correct";
+        const explanation = responseData.explanation || "No explanation provided";
+        const optionBlock = document.getElementById(`q${questionNum}-short`);
+
+        if (isCorrect) {
           const jsConfetti = new JSConfetti();
           jsConfetti.addConfetti();
-          // Show correct indicator
-          const optionBlock = document.getElementById(`q${questionNum}-short`);
           if (optionBlock) {
             optionBlock.classList.add('border-green-500');
             optionBlock.classList.remove('border-blue-800/30');
+            const block = document.createElement("div");
+            block.innerHTML = `
+              <div class="w-full h-auto border-green-500 border-2 mt-4 p-3 rounded"><p class="w-full h-auto text-left font-mono text-gray-300">
+                ${explanation}</p></div>
+            `;
+            optionBlock.append(block);
           }
-        } else {
-          // Show incorrect indicator
-          const optionBlock = document.getElementById(`q${questionNum}-short`);
+        }
+        else if (rresponseData.is_correct === "partial") {
           if (optionBlock) {
-            optionBlock.classList.add('border-red-500');
+            optionBlock.classList.add('border-yellow-500');
             optionBlock.classList.remove('border-blue-800/30');
+            const block = document.createElement("div");
+            block.innerHTML = `
+              <div class="w-full h-auto border-yellow-500 border-2 mt-4 p-3 rounded"><p class="w-full h-auto text-left font-mono text-gray-300">
+                ${explanation}</p></div>
+            `;
+            optionBlock.append(block);
           }
-        }
+          else {
+            if (optionBlock) {
+              optionBlock.classList.add('border-red-500');
+              optionBlock.classList.remove('border-blue-800/30');
+              const block = document.createElement("div");
+              block.innerHTML = `
+              <div class="w-full h-auto border-red-500 border-2 mt-4 p-3 rounded"><p class="w-full h-auto text-left font-mono text-gray-300">
+                ${explanation}</p></div>
+            `;
+              optionBlock.append(block);
+            }
+          }
 
-        // Show explanation
-        const explanationDiv = document.querySelector(`.explanation-${questionNum}`);
-        if (explanationDiv) {
-          explanationDiv.classList.remove('hidden');
-        }
 
-      } catch (error) {
+
+        }
+      }
+      catch (error) {
         console.error("Short answer checking error:", error);
       }
-      if (data.remarks == "correct") {
-
-        const jsConfetti = new JSConfetti();
-        jsConfetti.addConfetti();
-      }
-
     }
+
+
+
+
 
   </script>
 </body>

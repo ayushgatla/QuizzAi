@@ -18,7 +18,7 @@ class AgentManager:
         self.context_storage[session_id] = {}
         
         llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-exp",  
+            model="gemini-2.5-pro",  
             google_api_key=os.getenv("GEMINI_API_KEY"),  
             temperature=0.7, 
             convert_system_message_to_human=True  

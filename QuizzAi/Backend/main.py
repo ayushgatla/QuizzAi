@@ -17,13 +17,7 @@ app = FastAPI(
 
 
 def parse_agent_response(result: str):
-    """Attempt to parse the agent's output into JSON.
-    Tries multiple fallbacks:
-      - direct json.loads
-      - extract the first JSON object/array substring
-      - naive single-quote -> double-quote replacement as last resort
-    Raises on failure with a descriptive message.
-    """
+    
     if isinstance(result, (dict, list)):
         return result
     if not isinstance(result, str):
@@ -32,17 +26,14 @@ def parse_agent_response(result: str):
     try:
         return json.loads(result)
     except Exception:
-        # extract the first JSON object or array substring
         m = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', result)
         if m:
             candidate = m.group(1)
             try:
                 return json.loads(candidate)
             except Exception:
-                # last resort: replace single quotes with double quotes
                 candidate2 = candidate.replace("'", '"')
                 return json.loads(candidate2)
-        # If we reach here, we couldn't find/parse JSON
         raise ValueError("Could not parse agent response as JSON")
 
 app.add_middleware(
@@ -199,7 +190,7 @@ def shorts_check(chat_id: str, question:str , answer:str):
         raise HTTPException(400, "No PDF uploaded for this session")
 
     crew_id = session["crew_session_id"]
-    result = agent_maneger.run_agent(f"Check the given short answer question and answer from the stored pdf content and give the result in a json file with question,answer,is_correct (true/false),explanation why it is correct or not. Question: {question}, Answer: {answer}", crew_id)
+    result = agent_maneger.run_agent(f"Check the given short answer question and answer from the stored pdf content and give the result in a json file with question,answer,is_correct correct/not_correct/partial in the form of string,explanation why it is correct or not and in the case of partial correct mention where the answer needs to improve. Question: {question}, Answer: {answer}", crew_id)
 
     try:
         parsed = parse_agent_response(result)
