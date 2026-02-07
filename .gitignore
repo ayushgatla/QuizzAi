@@ -6,3 +6,5 @@ QuizzAi/Backend/keys.env
 !package-lock.json
 node_modules/
 .vscode
+QuizzAi/Backend/node_modules/
+QuizzAi/Backend/.env

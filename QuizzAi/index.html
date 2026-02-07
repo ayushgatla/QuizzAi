@@ -13,7 +13,7 @@
   <title>QuizzAi - Learn by Practice</title>
 </head>
 
-<body class="bg-gray-950 text-white antialiased">
+<body class="bg-[#251e29] text-white antialiased">
   <!-- Backdrop -->
   <style>
     .ani {
@@ -44,7 +44,7 @@
     <span class="sr-only">Open dashboard</span>
   </button>
   <aside id="dash"
-    class="fixed left-0 top-0 h-screen w-64 bg-gray-900 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-50 flex flex-col">
+    class="fixed left-0 top-0 h-screen w-64 bg-[#302634] border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-50 flex flex-col">
     <div class="p-4 border-b border-gray-800">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -103,7 +103,7 @@
 
     <div class="flex-1 overflow-y-auto p-4">
       <button id="newchat"
-        class="w-full flex items-center gap-3 px-4 py-3 bg-purple-500 hover:bg-blue-700 rounded-lg transition-colors mb-4">
+        class="w-full flex items-center gap-3 px-4 py-3 bg-[#9d6fb3] hover:bg-blue-700 rounded-lg transition-colors mb-4">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -173,9 +173,9 @@
       <div id="messagesContainer" class="flex-1 overflow-y-auto p-4  max-h-[770px] space-y-4 scroll">
         <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-center">
           <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
-            <img src="icons/download-removebg-preview.png" alt="" />
+            <img src="icons/output-onlinepngtools (1).png" alt="" />
           </div>
-          <h2 class="text-3xl font-bold mb-2 bg-blue-400 bg-clip-text text-transparent">
+          <h2 class="text-3xl font-bold mb-2 bg-[#9d6fb3] bg-clip-text text-transparent">
             Welcome to QuizzAi
           </h2>
           <p class="text-gray-400 max-w-md">
@@ -192,10 +192,10 @@
       <!-- Input Area -->
       <div id="chatsinput" class="p-4 border-t border-gray-800">
         <div
-          class="flex items-end gap-2 p-3 rounded-xl  bg-gray-900 border border-gray-800 focus-within:border-blue-500 transition-colors">
+          class="flex items-end gap-2 p-3 rounded-xl  bg-[#302636] border border-gray-800 focus-within:border-blue-500 transition-colors">
           <!-- Tools -->
           <div class="flex flex-col gap-2">
-            <label class="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors">
+            <label class="p-2 rounded-lg bg-[#42324b] hover:bg-blue-700 cursor-pointer transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -210,7 +210,7 @@
 
           <!-- Send Button -->
           <button id="sendButton" disabled
-            class="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            class="p-2 rounded-lg bg-[#9d6fb3] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path
                 d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
@@ -636,13 +636,13 @@
 
     function switchTab(tabName) {
       document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.classList.remove("active", "bg-blue-600", "text-white");
+        btn.classList.remove("active", "bg-[#9d6fb3]", "text-white");
         btn.classList.add("text-gray-400", "hover:text-white");
       });
 
       const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
       if (activeBtn) {
-        activeBtn.classList.add("active", "bg-blue-600", "text-white");
+        activeBtn.classList.add("active", "bg-[#9d6fb3]", "text-white");
         activeBtn.classList.remove("text-gray-400", "hover:text-white");
       }
 
